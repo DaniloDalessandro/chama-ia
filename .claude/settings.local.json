@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python -m pip install:*)",
+      "Bash(curl:*)",
+      "Bash(venvScriptsactivate)",
+      "Bash(.venvScriptspip.exe install djangorestframework djangorestframework-simplejwt)",
+      "Bash(find:*)",
+      "Bash(tree:*)",
+      "Bash(ls:*)",
+      "Bash(npm install)",
+      "Bash(npm run build:*)",
+      "Bash(npm install:*)",
+      "Bash(xcopy:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(dir:*)",
+      "Bash(timeout 10 npm run:*)",
+      "Bash(python manage.py migrate:*)",
+      "Bash(venvScriptspython.exe manage.py migrate)",
+      "Bash(./venv/Scripts/python.exe:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill /F /PID 27488)",
+      "Bash(taskkill:*)"
+    ]
+  }
+}
