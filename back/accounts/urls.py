@@ -11,6 +11,7 @@ from .views import (
 )
 
 urlpatterns = [
+    # Com barra final
     path("token/", CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("me/", UserMeView.as_view(), name="user_me"),
@@ -19,4 +20,13 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("password-reset/", PasswordResetView.as_view(), name="password_reset"),
     path("password-reset-confirm/", PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
+    # Sem barra final
+    path("token", CustomTokenObtainPairView.as_view()),
+    path("token/refresh", TokenRefreshView.as_view()),
+    path("me", UserMeView.as_view()),
+    path("update-profile", UpdateProfileView.as_view()),
+    path("change-password", ChangePasswordView.as_view()),
+    path("logout", LogoutView.as_view()),
+    path("password-reset", PasswordResetView.as_view()),
+    path("password-reset-confirm", PasswordResetConfirmView.as_view()),
 ]

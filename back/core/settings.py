@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt.token_blacklist",
     # Local apps
     "accounts",
-    
+    "chamados",
 ]
 
 MIDDLEWARE = [
@@ -159,6 +159,9 @@ CORS_ALLOW_METHODS = [
     "PUT",
 ]
 
+# Desabilitar redirect automatico para URLs com barra final
+APPEND_SLASH = False
+
 # Custom User Model
 AUTH_USER_MODEL = "accounts.CustomUser"
 
@@ -181,4 +184,53 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+# Media files (uploads)
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Throttling (rate limiting)
+REST_FRAMEWORK["DEFAULT_THROTTLE_CLASSES"] = [
+    "rest_framework.throttling.AnonRateThrottle",
+    "rest_framework.throttling.UserRateThrottle",
+]
+REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
+    "anon": "100/hour",
+    "user": "1000/hour",
+    "chamado_publico": "10/hour",
+    "chamado_consulta": "30/minute",
+    "chamado_admin": "1000/hour",
+}
+
+# Logging
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": "{levelname} {asctime} {module} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "file": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": BASE_DIR / "logs" / "django.log",
+            "formatter": "verbose",
+        },
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "chamados": {
+            "handlers": ["file", "console"],
+            "level": "INFO",
+            "propagate": True,
+        },
+    },
 }
