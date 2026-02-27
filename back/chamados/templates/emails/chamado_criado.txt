@@ -1,0 +1,35 @@
+========================================
+CHAMADO RECEBIDO COM SUCESSO
+========================================
+
+Olá {{ nome }},
+
+Seu chamado foi recebido com sucesso e já está sendo processado por nossa equipe.
+
+DETALHES DO CHAMADO:
+--------------------
+Protocolo: #{{ protocolo }}
+Assunto: {{ assunto }}
+Tipo: {{ tipo }}
+Status: {{ status }}
+Data: {{ data_criacao|date:"d/m/Y H:i" }}
+
+DESCRIÇÃO:
+----------
+{{ descricao }}
+
+IMPORTANTE:
+-----------
+Guarde o número do protocolo #{{ protocolo }} para futuras consultas.
+
+ACOMPANHAMENTO:
+---------------
+Acesse: {{ frontend_url }}/consulta/{{ protocolo }}
+
+Nossa equipe irá analisar sua solicitação e retornaremos em breve.
+Você receberá atualizações por email sempre que houver novidades.
+
+========================================
+Chama IA - Sistema de Chamados
+Este é um email automático, não responda.
+========================================

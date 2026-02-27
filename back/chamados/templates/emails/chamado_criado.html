@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chamado Recebido</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 30px;
+            border: 1px solid #ddd;
+        }
+        .info-box {
+            background: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 12px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>✅ Chamado Recebido com Sucesso!</h1>
+    </div>
+
+    <div class="content">
+        <p>Olá <strong>{{ nome }}</strong>,</p>
+
+        <p>Seu chamado foi recebido com sucesso e já está sendo processado por nossa equipe.</p>
+
+        <div class="info-box">
+            <div class="info-label">📋 Protocolo:</div>
+            <div style="font-size: 20px; font-weight: bold; color: #667eea;">#{{ protocolo }}</div>
+        </div>
+
+        <div class="info-box">
+            <div class="info-label">📌 Assunto:</div>
+            <div>{{ assunto }}</div>
+        </div>
+
+        <div class="info-box">
+            <div class="info-label">📝 Descrição:</div>
+            <div>{{ descricao }}</div>
+        </div>
+
+        <div class="info-box">
+            <div class="info-label">🏷️ Tipo:</div>
+            <div>{{ tipo }}</div>
+        </div>
+
+        <div class="info-box">
+            <div class="info-label">📊 Status:</div>
+            <div><strong>{{ status }}</strong></div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="{{ frontend_url }}/consulta/{{ protocolo }}" class="button">
+                🔍 Acompanhar Chamado
+            </a>
+        </div>
+
+        <p style="margin-top: 30px;">
+            <strong>Importante:</strong><br>
+            Guarde o número do protocolo <strong>#{{ protocolo }}</strong> para futuras consultas.
+        </p>
+
+        <p>
+            Nossa equipe irá analisar sua solicitação e retornaremos em breve.<br>
+            Você receberá atualizações por email sempre que houver novidades.
+        </p>
+    </div>
+
+    <div class="footer">
+        <p>Este é um email automático, não responda.</p>
+        <p>&copy; 2026 Chama IA - Sistema de Chamados</p>
+    </div>
+</body>
+</html>

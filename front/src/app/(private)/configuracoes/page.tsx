@@ -1,7 +1,7 @@
 "use client"
 
 import { useAuth } from "@/hooks/useAuth"
-import { useTheme } from "@/context/ThemeContext"
+import { useTheme } from "@/contexts/ThemeContext"
 import {
   Card,
   CardContent,

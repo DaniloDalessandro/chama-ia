@@ -2,11 +2,14 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
 import { jwtDecode } from "jwt-decode"
+import { setAuthTokens, clearAuthTokens } from "@/lib/cookies"
 
 interface User {
   id: number
   email: string
   name: string
+  role: "admin" | "atendente" | "cliente"
+  role_display: string
   cpf: string | null
   phone: string | null
   avatar: string | null
@@ -41,8 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("access_token")
     localStorage.removeItem("refresh_token")
     localStorage.removeItem("user")
-    document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
-    document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+    clearAuthTokens()
   }, [])
 
   const logout = useCallback(async () => {
@@ -91,12 +93,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setAccessToken(data.access)
       localStorage.setItem("access_token", data.access)
-      document.cookie = `access_token=${data.access}; path=/`
+
+      // Set secure cookies with protection flags
+      setAuthTokens(data.access, data.refresh)
 
       // simplejwt with rotate=True returns a new refresh token
       if (data.refresh) {
         localStorage.setItem("refresh_token", data.refresh)
-        document.cookie = `refresh_token=${data.refresh}; path=/`
       }
 
       return true
@@ -182,8 +185,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("refresh_token", data.refresh)
     localStorage.setItem("user", JSON.stringify(data.user))
 
-    document.cookie = `access_token=${data.access}; path=/`
-    document.cookie = `refresh_token=${data.refresh}; path=/`
+    // Set secure cookies with protection flags
+    setAuthTokens(data.access, data.refresh)
   }
 
   return (

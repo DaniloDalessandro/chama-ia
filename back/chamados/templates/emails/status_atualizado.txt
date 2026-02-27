@@ -1,0 +1,30 @@
+========================================
+STATUS DO CHAMADO ATUALIZADO
+========================================
+
+Olá {{ nome }},
+
+O status do seu chamado #{{ protocolo }} foi atualizado.
+
+MUDANÇA DE STATUS:
+------------------
+De: {{ status_anterior }}
+Para: {{ status_novo }}
+
+DETALHES:
+---------
+Protocolo: #{{ protocolo }}
+Assunto: {{ assunto_chamado }}
+Atualizado por: {{ atendente }}
+Data: {{ data_atualizacao|date:"d/m/Y H:i" }}
+
+ACOMPANHAMENTO:
+---------------
+Acesse: {{ frontend_url }}/consulta/{{ protocolo }}
+
+Você continuará recebendo atualizações sobre este chamado por email.
+
+========================================
+Chama IA - Sistema de Chamados
+Este é um email automático, não responda.
+========================================

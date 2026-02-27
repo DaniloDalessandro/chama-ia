@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chamado Concluído</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #4CAF50;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #4CAF50;
+            margin: 0;
+            font-size: 24px;
+        }
+        .success-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .content {
+            margin-bottom: 30px;
+        }
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .info-box {
+            background-color: #f1f8f4;
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .info-title {
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .info-item {
+            margin: 8px 0;
+            font-size: 14px;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .highlight-box {
+            background-color: #fff9c4;
+            border-left: 4px solid #fbc02d;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .highlight-text {
+            color: #f57f17;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .button {
+            display: inline-block;
+            padding: 15px 30px;
+            background-color: #4CAF50;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .button:hover {
+            background-color: #45a049;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            color: #666;
+            font-size: 12px;
+        }
+        .satisfaction {
+            background-color: #e3f2fd;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .satisfaction-title {
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="success-icon">✅</div>
+            <h1>Chamado Atendido!</h1>
+        </div>
+
+        <div class="content">
+            <p class="greeting">Olá, <strong>{{ nome }}</strong>!</p>
+
+            <p>Temos ótimas notícias! Seu chamado foi <strong>atendido e concluído</strong> com sucesso.</p>
+
+            <div class="info-box">
+                <div class="info-title">📋 Informações do Chamado</div>
+                <div class="info-item">
+                    <span class="info-label">Protocolo:</span> #{{ protocolo }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Assunto:</span> {{ assunto_chamado }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Tipo:</span> {{ tipo }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Status:</span> {{ status }}
+                </div>
+            </div>
+
+            <div class="info-box">
+                <div class="info-title">⏱️ Linha do Tempo</div>
+                <div class="info-item">
+                    <span class="info-label">Aberto em:</span> {{ data_criacao|date:"d/m/Y às H:i" }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Concluído em:</span> {{ data_conclusao|date:"d/m/Y às H:i" }}
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Atendido por:</span> {{ atendente }}
+                </div>
+            </div>
+
+            {% if descricao %}
+            <div class="info-box">
+                <div class="info-title">📝 Solução</div>
+                <p style="margin: 0; font-size: 14px;">{{ descricao }}</p>
+            </div>
+            {% endif %}
+
+            <div class="satisfaction">
+                <div class="satisfaction-title">💬 Sua opinião é importante!</div>
+                <p style="margin: 10px 0; color: #555;">
+                    Se tiver qualquer dúvida sobre a solução ou precisar de ajustes, não hesite em nos contatar.
+                </p>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="{{ frontend_url }}/consulta/{{ protocolo }}" class="button">
+                    Ver Detalhes do Chamado
+                </a>
+            </div>
+
+            <p style="margin-top: 30px; font-size: 14px; color: #666;">
+                Obrigado por utilizar nosso sistema de atendimento. Estamos sempre à disposição!
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>Este é um e-mail automático. Por favor, não responda.</p>
+            <p><strong>Chama IA</strong> - Sistema de Chamados com Inteligência Artificial</p>
+            <p style="margin-top: 10px;">
+                <a href="{{ frontend_url }}" style="color: #4CAF50; text-decoration: none;">Acessar o sistema</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

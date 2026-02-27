@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status Atualizado</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 30px;
+            border: 1px solid #ddd;
+        }
+        .status-change {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin: 10px;
+        }
+        .status-old {
+            background: #e0e0e0;
+            color: #666;
+        }
+        .status-new {
+            background: #4caf50;
+            color: white;
+        }
+        .arrow {
+            font-size: 24px;
+            color: #f5576c;
+            margin: 0 10px;
+        }
+        .info-box {
+            background: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #f5576c;
+            border-radius: 4px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #f5576c;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 12px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔔 Status do Chamado Atualizado</h1>
+    </div>
+
+    <div class="content">
+        <p>Olá <strong>{{ nome }}</strong>,</p>
+
+        <p>O status do seu chamado <strong>#{{ protocolo }}</strong> foi atualizado.</p>
+
+        <div class="status-change">
+            <span class="status-badge status-old">{{ status_anterior }}</span>
+            <span class="arrow">→</span>
+            <span class="status-badge status-new">{{ status_novo }}</span>
+        </div>
+
+        <div class="info-box">
+            <div style="font-weight: bold; color: #f5576c; margin-bottom: 5px;">📋 Protocolo:</div>
+            <div style="font-size: 18px; font-weight: bold;">#{{ protocolo }}</div>
+        </div>
+
+        <div class="info-box">
+            <div style="font-weight: bold; color: #f5576c; margin-bottom: 5px;">📌 Assunto:</div>
+            <div>{{ assunto_chamado }}</div>
+        </div>
+
+        <div class="info-box">
+            <div style="font-weight: bold; color: #f5576c; margin-bottom: 5px;">👤 Atualizado por:</div>
+            <div>{{ atendente }}</div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="{{ frontend_url }}/consulta/{{ protocolo }}" class="button">
+                🔍 Ver Detalhes
+            </a>
+        </div>
+
+        <p style="margin-top: 30px;">
+            Você continuará recebendo atualizações sobre este chamado por email.
+        </p>
+    </div>
+
+    <div class="footer">
+        <p>Este é um email automático, não responda.</p>
+        <p>&copy; 2026 Chama IA - Sistema de Chamados</p>
+    </div>
+</body>
+</html>

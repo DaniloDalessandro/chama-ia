@@ -1,7 +1,9 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
-import { ThemeProvider } from "@/context/ThemeContext"
-import { AuthProvider } from "@/context/AuthContext"
+import { ThemeProvider } from "@/contexts/ThemeContext"
+import { AuthProvider } from "@/contexts/AuthContext"
+import { NotificationProvider } from "@/contexts/NotificationContext"
+import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
 const geistSans = Geist({
@@ -31,7 +33,10 @@ export default function RootLayout({
       >
         <ThemeProvider defaultTheme="system" storageKey="app-theme">
           <AuthProvider>
-            {children}
+            <NotificationProvider>
+              {children}
+              <Toaster richColors position="top-right" />
+            </NotificationProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

@@ -1,0 +1,30 @@
+========================================
+NOVA RESPOSTA NO SEU CHAMADO
+========================================
+
+Olá {{ nome }},
+
+Há uma nova resposta no seu chamado #{{ protocolo }}.
+
+DETALHES:
+---------
+Protocolo: #{{ protocolo }}
+Assunto: {{ assunto_chamado }}
+
+RESPOSTA:
+---------
+De: {{ autor }}
+Data: {{ data_comentario|date:"d/m/Y H:i" }}
+
+{{ comentario }}
+
+ACOMPANHAMENTO:
+---------------
+Acesse: {{ frontend_url }}/consulta/{{ protocolo }}
+
+Você pode responder através do sistema de acompanhamento.
+
+========================================
+Chama IA - Sistema de Chamados
+Este é um email automático, não responda.
+========================================

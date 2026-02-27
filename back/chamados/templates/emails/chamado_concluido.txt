@@ -1,0 +1,48 @@
+✅ CHAMADO ATENDIDO - CHAMA IA
+
+Olá, {{ nome }}!
+
+Temos ótimas notícias! Seu chamado foi ATENDIDO E CONCLUÍDO com sucesso.
+
+═══════════════════════════════════════════════
+📋 INFORMAÇÕES DO CHAMADO
+═══════════════════════════════════════════════
+
+Protocolo: #{{ protocolo }}
+Assunto: {{ assunto_chamado }}
+Tipo: {{ tipo }}
+Status: {{ status }}
+
+═══════════════════════════════════════════════
+⏱️ LINHA DO TEMPO
+═══════════════════════════════════════════════
+
+Aberto em: {{ data_criacao|date:"d/m/Y às H:i" }}
+Concluído em: {{ data_conclusao|date:"d/m/Y às H:i" }}
+Atendido por: {{ atendente }}
+
+{% if descricao %}═══════════════════════════════════════════════
+📝 SOLUÇÃO
+═══════════════════════════════════════════════
+
+{{ descricao }}
+{% endif %}
+═══════════════════════════════════════════════
+💬 SUA OPINIÃO É IMPORTANTE!
+═══════════════════════════════════════════════
+
+Se tiver qualquer dúvida sobre a solução ou precisar de ajustes,
+não hesite em nos contatar.
+
+═══════════════════════════════════════════════
+
+Ver detalhes do chamado:
+{{ frontend_url }}/consulta/{{ protocolo }}
+
+Obrigado por utilizar nosso sistema de atendimento!
+Estamos sempre à disposição.
+
+---
+Este é um e-mail automático. Por favor, não responda.
+Chama IA - Sistema de Chamados com Inteligência Artificial
+{{ frontend_url }}

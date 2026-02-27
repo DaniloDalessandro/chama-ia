@@ -1,0 +1,5 @@
+Collecting python-magic-bin
+  Using cached python_magic_bin-0.4.14-py2.py3-none-win_amd64.whl.metadata (710 bytes)
+Using cached python_magic_bin-0.4.14-py2.py3-none-win_amd64.whl (409 kB)
+Installing collected packages: python-magic-bin
+Successfully installed python-magic-bin-0.4.14

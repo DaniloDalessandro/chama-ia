@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Command, Home, Users, Settings, LifeBuoy, Send } from "lucide-react"
+import { Headset, Home, Users, Settings, ExternalLink, Ticket, History, Building2 } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -12,9 +12,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { NavMain } from "./NavMain"
-import { NavSecondary } from "./NavSecondary"
-import { NavUser } from "./NavUser"
+import { NavMain } from "@/components/layout/navigation/NavMain"
+import { NavSecondary } from "@/components/layout/navigation/NavSecondary"
+import { NavUser } from "@/components/layout/navigation/NavUser"
 import { useAuth } from "@/hooks/useAuth"
 
 const navItems = [
@@ -22,6 +22,21 @@ const navItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: Home,
+  },
+  {
+    title: "Chamados",
+    url: "/chamados",
+    icon: Ticket,
+  },
+  {
+    title: "Histórico",
+    url: "/historico",
+    icon: History,
+  },
+  {
+    title: "Clientes",
+    url: "/clientes",
+    icon: Building2,
   },
   {
     title: "Usuários",
@@ -33,20 +48,15 @@ const navItems = [
     url: "/configuracoes",
     icon: Settings,
   },
+  {
+    title: "Landing Page",
+    url: "/atendimento",
+    icon: ExternalLink,
+    external: true,
+  },
 ]
 
-const navSecondary = [
-  {
-    title: "Suporte",
-    url: "#",
-    icon: LifeBuoy,
-  },
-  {
-    title: "Feedback",
-    url: "#",
-    icon: Send,
-  },
-]
+const navSecondary: { title: string; url: string; icon: typeof Home; external?: boolean }[] = []
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
@@ -60,7 +70,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton size="lg" asChild>
               <Link href="/dashboard">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <Command className="size-4" />
+                  <Headset className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">Chama IA</span>

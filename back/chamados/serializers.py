@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.utils.html import strip_tags
 import bleach
 
-from .models import Chamado, AnexoChamado, HistoricoChamado, ComentarioChamado
+from .models import Chamado, AnexoChamado, HistoricoChamado, ComentarioChamado, Notification, WebhookConfig
 
 
 # ============================================
@@ -161,6 +161,7 @@ class ChamadoPublicoCreateSerializer(serializers.ModelSerializer):
             "nome",
             "email",
             "telefone",
+            "cliente",
             "tipo",
             "assunto",
             "descricao",
@@ -265,8 +266,22 @@ class ChamadoPublicoCreateSerializer(serializers.ModelSerializer):
         return AnexoChamado.TipoArquivo.OUTRO
 
 
+class ChamadoPublicoCreateResponseSerializer(serializers.ModelSerializer):
+    """Serializer minimo de resposta apos criar chamado (retorno rapido, sem IA)."""
+
+    class Meta:
+        model = Chamado
+        fields = [
+            "id",
+            "protocolo",
+            "status",
+            "created_at",
+        ]
+        read_only_fields = fields
+
+
 class ChamadoPublicoResponseSerializer(serializers.ModelSerializer):
-    """Serializer de resposta apos criar chamado (dados minimos)."""
+    """Serializer de resposta apos criar chamado (inclui classificacao IA)."""
 
     class Meta:
         model = Chamado
@@ -274,6 +289,12 @@ class ChamadoPublicoResponseSerializer(serializers.ModelSerializer):
             "protocolo",
             "status",
             "created_at",
+            "ia_categoria",
+            "ia_prioridade_sugerida",
+            "ia_resumo",
+            "ia_palavras_chave",
+            "ia_confianca",
+            "ia_processed",
         ]
         read_only_fields = fields
 
@@ -286,12 +307,17 @@ class ChamadoListSerializer(serializers.ModelSerializer):
     """Serializer para listagem de chamados (admin)."""
 
     status_display = serializers.CharField(source="get_status_display", read_only=True)
+    status_kanban_display = serializers.CharField(source="get_status_kanban_display", read_only=True)
     prioridade_display = serializers.CharField(source="get_prioridade_display", read_only=True)
     tipo_display = serializers.CharField(source="get_tipo_display", read_only=True)
     origem_display = serializers.CharField(source="get_origem_display", read_only=True)
     atendente_nome = serializers.CharField(source="atendente.name", read_only=True, default=None)
+    created_by_nome = serializers.CharField(source="created_by.name", read_only=True, default=None)
+    updated_by_nome = serializers.CharField(source="updated_by.name", read_only=True, default=None)
+    cliente_nome = serializers.SerializerMethodField()
     total_anexos = serializers.SerializerMethodField()
     total_comentarios = serializers.SerializerMethodField()
+    chamado_similar_protocolo = serializers.CharField(source="chamado_similar_ref.protocolo", read_only=True, default=None)
 
     class Meta:
         model = Chamado
@@ -300,22 +326,45 @@ class ChamadoListSerializer(serializers.ModelSerializer):
             "protocolo",
             "nome",
             "email",
+            "cliente",
+            "cliente_nome",
             "tipo",
             "tipo_display",
             "assunto",
+            "descricao",
             "status",
             "status_display",
+            "status_kanban",
+            "status_kanban_display",
             "prioridade",
             "prioridade_display",
             "origem",
             "origem_display",
             "atendente_nome",
+            "created_by_nome",
+            "updated_by_nome",
             "total_anexos",
             "total_comentarios",
             "created_at",
             "updated_at",
+            "resolved_at",
+            # Campos IA
+            "ia_processed",
+            "ia_categoria",
+            "ia_prioridade_sugerida",
+            "ia_resumo",
+            "ia_confianca",
+            "is_recorrente",
+            "chamado_similar_ref",
+            "chamado_similar_protocolo",
+            "similaridade_score",
         ]
         read_only_fields = fields
+
+    def get_cliente_nome(self, obj):
+        if obj.cliente:
+            return obj.cliente.nome_fantasia or obj.cliente.nome
+        return None
 
     def get_total_anexos(self, obj):
         return obj.anexos.count()
@@ -324,18 +373,31 @@ class ChamadoListSerializer(serializers.ModelSerializer):
         return obj.comentarios.count()
 
 
+class ChamadoSimilarSerializer(serializers.ModelSerializer):
+    """Serializer para dados basicos de chamado similar."""
+
+    class Meta:
+        model = Chamado
+        fields = ["id", "protocolo", "assunto", "status", "resolved_at"]
+        read_only_fields = fields
+
+
 class ChamadoDetailSerializer(serializers.ModelSerializer):
     """Serializer para detalhes completos do chamado (admin)."""
 
     status_display = serializers.CharField(source="get_status_display", read_only=True)
+    status_kanban_display = serializers.CharField(source="get_status_kanban_display", read_only=True)
     prioridade_display = serializers.CharField(source="get_prioridade_display", read_only=True)
     tipo_display = serializers.CharField(source="get_tipo_display", read_only=True)
     origem_display = serializers.CharField(source="get_origem_display", read_only=True)
     atendente_nome = serializers.CharField(source="atendente.name", read_only=True, default=None)
     usuario_nome = serializers.CharField(source="usuario.name", read_only=True, default=None)
+    created_by_nome = serializers.CharField(source="created_by.name", read_only=True, default=None)
+    updated_by_nome = serializers.CharField(source="updated_by.name", read_only=True, default=None)
     anexos = AnexoChamadoSerializer(many=True, read_only=True)
     historico = HistoricoChamadoSerializer(many=True, read_only=True)
     comentarios = ComentarioChamadoSerializer(many=True, read_only=True)
+    chamado_similar = ChamadoSimilarSerializer(source="chamado_similar_ref", read_only=True)
 
     class Meta:
         model = Chamado
@@ -351,6 +413,8 @@ class ChamadoDetailSerializer(serializers.ModelSerializer):
             "descricao",
             "status",
             "status_display",
+            "status_kanban",
+            "status_kanban_display",
             "prioridade",
             "prioridade_display",
             "origem",
@@ -359,9 +423,23 @@ class ChamadoDetailSerializer(serializers.ModelSerializer):
             "user_agent",
             "usuario_nome",
             "atendente_nome",
+            "created_by_nome",
+            "updated_by_nome",
             "chat_session_id",
             "ia_processed",
             "ia_response",
+            # Campos IA
+            "ia_categoria",
+            "ia_prioridade_sugerida",
+            "ia_resumo",
+            "ia_problema_principal",
+            "ia_palavras_chave",
+            "ia_confianca",
+            "ia_processed_at",
+            "is_recorrente",
+            "chamado_similar",
+            "similaridade_score",
+            # Datas
             "created_at",
             "updated_at",
             "resolved_at",
@@ -522,6 +600,53 @@ class ChamadoUpdatePrioridadeSerializer(serializers.ModelSerializer):
         return instance
 
 
+class ChamadoUpdateStatusKanbanSerializer(serializers.ModelSerializer):
+    """Serializer para atualizar status Kanban (drag and drop)."""
+
+    class Meta:
+        model = Chamado
+        fields = ["status_kanban"]
+
+    def validate_status_kanban(self, value):
+        if value not in dict(Chamado.StatusKanban.choices):
+            raise serializers.ValidationError("Status Kanban invalido.")
+        return value
+
+    def update(self, instance, validated_data):
+        new_status_kanban = validated_data.get("status_kanban")
+        old_status_kanban = instance.status_kanban
+
+        if old_status_kanban != new_status_kanban:
+            request = self.context.get("request")
+            user = request.user if request and request.user.is_authenticated else None
+
+            # Usar o metodo do model para atualizar
+            instance.update_status_from_kanban(new_status_kanban, user)
+
+            # Registrar no historico
+            HistoricoChamado.objects.create(
+                chamado=instance,
+                tipo_acao=HistoricoChamado.TipoAcao.STATUS_ALTERADO,
+                descricao=f"Status Kanban alterado de {dict(Chamado.StatusKanban.choices).get(old_status_kanban)} para {dict(Chamado.StatusKanban.choices).get(new_status_kanban)}",
+                valor_anterior=old_status_kanban,
+                valor_novo=new_status_kanban,
+                usuario=user,
+                ip_address=self._get_client_ip(request) if request else None,
+            )
+
+        return instance
+
+    def _get_client_ip(self, request):
+        if not request:
+            return None
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(",")[0].strip()
+        else:
+            ip = request.META.get("REMOTE_ADDR")
+        return ip
+
+
 # ============================================
 # Serializer para consulta publica por protocolo
 # ============================================
@@ -549,3 +674,184 @@ class ChamadoConsultaPublicaSerializer(serializers.ModelSerializer):
     def get_comentarios_publicos(self, obj):
         comentarios = obj.comentarios.filter(tipo=ComentarioChamado.TipoComentario.PUBLICO)
         return ComentarioChamadoSerializer(comentarios, many=True).data
+
+
+class ChamadoConsultaProtocoloDetailSerializer(serializers.ModelSerializer):
+    """Serializer completo para consulta publica por protocolo (sem exigir e-mail)."""
+
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+    prioridade_display = serializers.CharField(source="get_prioridade_display", read_only=True)
+    tipo_display = serializers.CharField(source="get_tipo_display", read_only=True)
+    comentarios_publicos = serializers.SerializerMethodField()
+    anexos = AnexoChamadoSerializer(many=True, read_only=True)
+    historico_publico = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Chamado
+        fields = [
+            "protocolo",
+            "assunto",
+            "descricao",
+            "tipo",
+            "tipo_display",
+            "status",
+            "status_display",
+            "prioridade",
+            "prioridade_display",
+            "created_at",
+            "updated_at",
+            "resolved_at",
+            "comentarios_publicos",
+            "anexos",
+            "historico_publico",
+        ]
+        read_only_fields = fields
+
+    def get_comentarios_publicos(self, obj):
+        comentarios = obj.comentarios.filter(tipo=ComentarioChamado.TipoComentario.PUBLICO)
+        return ComentarioChamadoSerializer(comentarios, many=True).data
+
+    def get_historico_publico(self, obj):
+        historico = obj.historico.filter(
+            tipo_acao__in=[
+                HistoricoChamado.TipoAcao.CRIADO,
+                HistoricoChamado.TipoAcao.STATUS_ALTERADO,
+                HistoricoChamado.TipoAcao.PRIORIDADE_ALTERADA,
+            ]
+        )
+        return HistoricoChamadoSerializer(historico, many=True).data
+
+
+class ChamadoListaPorEmailSerializer(serializers.ModelSerializer):
+    """Serializer para listagem de chamados por e-mail (dados resumidos)."""
+
+    status_display = serializers.CharField(source="get_status_display", read_only=True)
+
+    class Meta:
+        model = Chamado
+        fields = [
+            "id",
+            "protocolo",
+            "assunto",
+            "status",
+            "status_display",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = fields
+
+
+# ============================================
+# Serializers de Notificacoes
+# ============================================
+
+class NotificationSerializer(serializers.ModelSerializer):
+    """Serializer para notificacoes em tempo real."""
+
+    notification_type_display = serializers.CharField(
+        source="get_notification_type_display",
+        read_only=True
+    )
+    chamado_protocolo = serializers.CharField(
+        source="chamado.protocolo",
+        read_only=True,
+        allow_null=True
+    )
+    time_ago = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Notification
+        fields = [
+            "id",
+            "notification_type",
+            "notification_type_display",
+            "title",
+            "message",
+            "chamado",
+            "chamado_protocolo",
+            "is_read",
+            "read_at",
+            "created_at",
+            "time_ago",
+        ]
+        read_only_fields = fields
+
+    def get_time_ago(self, obj):
+        """Retorna tempo relativo (ex: '5 minutos atras')."""
+        from django.utils.timesince import timesince
+        return timesince(obj.created_at)
+
+
+# ============================================
+# Serializers de Webhooks
+# ============================================
+
+class WebhookConfigSerializer(serializers.ModelSerializer):
+    """Serializer para configuracao de webhooks."""
+
+    webhook_type_display = serializers.CharField(
+        source="get_webhook_type_display",
+        read_only=True
+    )
+    url = serializers.CharField(write_only=True, required=False)
+    success_rate = serializers.SerializerMethodField()
+
+    class Meta:
+        model = WebhookConfig
+        fields = [
+            "id",
+            "name",
+            "webhook_type",
+            "webhook_type_display",
+            "url",  # write_only
+            "trigger_events",
+            "is_active",
+            "max_retries",
+            "total_sent",
+            "total_success",
+            "total_failed",
+            "success_rate",
+            "last_triggered_at",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "total_sent",
+            "total_success",
+            "total_failed",
+            "success_rate",
+            "last_triggered_at",
+            "created_at",
+            "updated_at",
+        ]
+
+    def get_success_rate(self, obj):
+        """Calcula taxa de sucesso em porcentagem."""
+        if obj.total_sent == 0:
+            return 0
+        return round((obj.total_success / obj.total_sent) * 100, 2)
+
+    def create(self, validated_data):
+        """Cria webhook com URL criptografada."""
+        url = validated_data.pop("url", None)
+        webhook = WebhookConfig(**validated_data)
+
+        if url:
+            webhook.set_url(url)
+
+        webhook.save()
+        return webhook
+
+    def update(self, instance, validated_data):
+        """Atualiza webhook, criptografando URL se fornecida."""
+        url = validated_data.pop("url", None)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        if url:
+            instance.set_url(url)
+
+        instance.save()
+        return instance

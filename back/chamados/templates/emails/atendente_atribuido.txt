@@ -1,0 +1,31 @@
+========================================
+NOVO CHAMADO ATRIBUÍDO
+========================================
+
+Olá {{ atendente_nome }},
+
+Um novo chamado foi atribuído para você!
+
+DETALHES DO CHAMADO:
+--------------------
+Protocolo: #{{ protocolo }}
+Cliente: {{ cliente_nome }}
+Assunto: {{ assunto }}
+Tipo: {{ tipo }}
+Prioridade: {{ prioridade }}
+Status: {{ status }}
+Aberto em: {{ data_criacao|date:"d/m/Y H:i" }}
+
+DESCRIÇÃO:
+----------
+{{ descricao }}
+
+AÇÃO NECESSÁRIA:
+----------------
+Acesse o sistema para atender este chamado:
+{{ frontend_url }}/chamados/{{ protocolo }}
+
+========================================
+Chama IA - Sistema de Chamados
+Este é um email automático, não responda.
+========================================

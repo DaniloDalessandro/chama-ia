@@ -1,0 +1,131 @@
+WARNING 2026-02-06 20:02:55,063 serializers Erro ao disparar processamento IA: 
+Retry limit exceeded while trying to reconnect to the Celery redis result store backend. The Celery application must be restarted.
+
+INFO 2026-02-06 20:02:55,064 views Chamado criado: 20260206-14Z8I - Email: dan@email.com - IP: ::1
+WARNING 2026-02-06 20:08:44,085 serializers Erro ao disparar processamento IA: 
+Retry limit exceeded while trying to reconnect to the Celery redis result store backend. The Celery application must be restarted.
+
+INFO 2026-02-06 20:08:44,087 views Chamado criado: 20260206-PTXMQ - Email: dan@email.com - IP: ::1
+INFO 2026-02-07 09:17:28,707 views Chamado criado: 0001/2026 - Email: dan@email.com - IP: ::1
+INFO 2026-02-07 09:21:14,852 views Chamado criado: 0002/2026 - Email: dan@email.com - IP: ::1
+INFO 2026-02-07 09:36:14,018 views Chamado criado: 0003/2026 - Email: dan@email.com - IP: ::1
+INFO 2026-02-07 09:37:42,176 views Processar IA chamado_id=3 - inicio
+INFO 2026-02-07 09:37:49,181 views Iniciando processamento IA para chamado 20260205-D9Y4L
+ERROR 2026-02-07 09:37:50,528 ia_classifier Erro ao classificar chamado: 429 Quota exceeded for quota metric 'Generate Content API requests per minute' and limit 'GenerateContent request limit per minute for a region' of service 'generativelanguage.googleapis.com' for consumer 'project_number:782471005510'. [reason: "RATE_LIMIT_EXCEEDED"
+domain: "googleapis.com"
+metadata {
+  key: "service"
+  value: "generativelanguage.googleapis.com"
+}
+metadata {
+  key: "quota_unit"
+  value: "1/min/{project}/{region}"
+}
+metadata {
+  key: "quota_metric"
+  value: "generativelanguage.googleapis.com/generate_content_requests"
+}
+metadata {
+  key: "quota_location"
+  value: "us-south1"
+}
+metadata {
+  key: "quota_limit"
+  value: "GenerateContentRequestsPerMinutePerProjectPerRegion"
+}
+metadata {
+  key: "quota_limit_value"
+  value: "0"
+}
+metadata {
+  key: "consumer"
+  value: "projects/782471005510"
+}
+, links {
+  description: "Request a higher quota limit."
+  url: "https://cloud.google.com/docs/quotas/help/request_increase"
+}
+]
+ERROR 2026-02-07 09:37:50,771 ia_classifier Erro ao gerar embedding: 404 models/text-embedding-004 is not found for API version v1beta, or is not supported for embedContent. Call ListModels to see the list of available models and their supported methods.
+INFO 2026-02-07 09:37:50,810 views Chamado 20260205-D9Y4L processado pela IA: categoria=financeiro, similar=False
+INFO 2026-02-07 09:38:38,701 views Processar IA chamado_id=3 - inicio
+INFO 2026-02-07 09:38:38,703 views Chamado 20260205-D9Y4L ja processado, retornando cache
+INFO 2026-02-07 09:39:20,880 views Chamado criado: 0004/2026 - Email: dan@email.com - IP: ::1
+INFO 2026-02-07 09:39:20,912 views Processar IA chamado_id=15 - inicio
+INFO 2026-02-07 09:39:21,954 views Iniciando processamento IA para chamado 0004/2026
+ERROR 2026-02-07 09:39:23,170 ia_classifier Erro ao classificar chamado: 429 Quota exceeded for quota metric 'Generate Content API requests per minute' and limit 'GenerateContent request limit per minute for a region' of service 'generativelanguage.googleapis.com' for consumer 'project_number:782471005510'. [reason: "RATE_LIMIT_EXCEEDED"
+domain: "googleapis.com"
+metadata {
+  key: "service"
+  value: "generativelanguage.googleapis.com"
+}
+metadata {
+  key: "quota_unit"
+  value: "1/min/{project}/{region}"
+}
+metadata {
+  key: "quota_metric"
+  value: "generativelanguage.googleapis.com/generate_content_requests"
+}
+metadata {
+  key: "quota_location"
+  value: "us-south1"
+}
+metadata {
+  key: "quota_limit"
+  value: "GenerateContentRequestsPerMinutePerProjectPerRegion"
+}
+metadata {
+  key: "quota_limit_value"
+  value: "0"
+}
+metadata {
+  key: "consumer"
+  value: "projects/782471005510"
+}
+, links {
+  description: "Request a higher quota limit."
+  url: "https://cloud.google.com/docs/quotas/help/request_increase"
+}
+]
+ERROR 2026-02-07 09:39:23,401 ia_classifier Erro ao gerar embedding: 404 models/text-embedding-004 is not found for API version v1beta, or is not supported for embedContent. Call ListModels to see the list of available models and their supported methods.
+INFO 2026-02-07 09:39:23,432 views Chamado 0004/2026 processado pela IA: categoria=outros, similar=False
+ERROR 2026-02-13 19:40:49,994 ia_classifier Erro ao classificar chamado: 429 Quota exceeded for quota metric 'Generate Content API requests per minute' and limit 'GenerateContent request limit per minute for a region' of service 'generativelanguage.googleapis.com' for consumer 'project_number:782471005510'. [reason: "RATE_LIMIT_EXCEEDED"
+domain: "googleapis.com"
+metadata {
+  key: "service"
+  value: "generativelanguage.googleapis.com"
+}
+metadata {
+  key: "quota_unit"
+  value: "1/min/{project}/{region}"
+}
+metadata {
+  key: "quota_metric"
+  value: "generativelanguage.googleapis.com/generate_content_requests"
+}
+metadata {
+  key: "quota_location"
+  value: "us-south1"
+}
+metadata {
+  key: "quota_limit"
+  value: "GenerateContentRequestsPerMinutePerProjectPerRegion"
+}
+metadata {
+  key: "quota_limit_value"
+  value: "0"
+}
+metadata {
+  key: "consumer"
+  value: "projects/782471005510"
+}
+, links {
+  description: "Request a higher quota limit."
+  url: "https://cloud.google.com/docs/quotas/help/request_increase"
+}
+]
+ERROR 2026-02-13 19:40:50,227 ia_classifier Erro ao gerar embedding: 404 models/text-embedding-004 is not found for API version v1beta, or is not supported for embedContent. Call ListModels to see the list of available models and their supported methods.
+INFO 2026-02-14 22:37:46,600 views Chamado criado: 0001/2026 - Email: cliente@test.com - IP: 127.0.0.1
+WARNING 2026-02-14 22:39:35,911 views Falha ao despachar task de e-mail: Error 10061 connecting to localhost:6379. Nenhuma conexão pôde ser feita porque a máquina de destino as recusou ativamente.
+INFO 2026-02-14 22:39:35,935 emails Email de confirmação enviado para cliente@test.com - Protocolo 0001/2026

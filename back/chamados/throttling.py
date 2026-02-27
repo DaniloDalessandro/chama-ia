@@ -19,6 +19,23 @@ class ChamadoPublicoRateThrottle(AnonRateThrottle):
         }
 
 
+class ChamadoPublicoProcessarIARateThrottle(AnonRateThrottle):
+    """
+    Rate limit para processamento IA de chamados publicos.
+    Mais generoso que o create pois e chamado automaticamente apos criar.
+    """
+
+    rate = "30/hour"
+    scope = "chamado_publico_ia"
+
+    def get_cache_key(self, request, view):
+        ident = self.get_ident(request)
+        return self.cache_format % {
+            "scope": self.scope,
+            "ident": ident
+        }
+
+
 class ChamadoConsultaRateThrottle(AnonRateThrottle):
     """
     Rate limit para consulta publica de chamados.

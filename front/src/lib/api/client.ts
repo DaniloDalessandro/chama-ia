@@ -1,3 +1,5 @@
+import { setAuthTokens, clearAuthTokens } from '@/lib/cookies'
+
 interface RequestOptions extends RequestInit {
   skipAuth?: boolean
 }
@@ -23,11 +25,10 @@ class ApiClient {
 
       const data = await response.json()
       localStorage.setItem("access_token", data.access)
-      document.cookie = `access_token=${data.access}; path=/`
+      setAuthTokens(data.access, data.refresh)
 
       if (data.refresh) {
         localStorage.setItem("refresh_token", data.refresh)
-        document.cookie = `refresh_token=${data.refresh}; path=/`
       }
 
       return true
@@ -76,8 +77,7 @@ class ApiClient {
         localStorage.removeItem("access_token")
         localStorage.removeItem("refresh_token")
         localStorage.removeItem("user")
-        document.cookie = "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
-        document.cookie = "refresh_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+        clearAuthTokens()
         window.location.href = "/login"
         throw new Error("Sessão expirada")
       }

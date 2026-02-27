@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,17 +21,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-7170o3b4fg3t$@)m5-%4_q59lu-h(1q2-j322+&_)7nqkt#)=$"
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-insecure-LOCAL-DEV-ONLY-CHANGE-IN-PRODUCTION"
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "yes")
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+# IMPORTANT: In production, set ALLOWED_HOSTS via environment variable
+# Example: ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",  # ASGI server - must be first!
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -42,9 +49,17 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
+    "django_filters",
+    "drf_spectacular",
+    "channels",  # WebSocket support
+    "health_check",  # Health check endpoint
+    "health_check.db",  # Database health check
+    "health_check.cache",  # Cache health check
+    "health_check.storage",  # Storage health check
     # Local apps
     "accounts",
     "chamados",
+    "clientes",
 ]
 
 MIDDLEWARE = [
@@ -77,16 +92,33 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "core.wsgi.application"
 
+# ASGI Application for WebSocket support
+ASGI_APPLICATION = "core.asgi.application"
+
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+# Usar PostgreSQL se as variaveis de ambiente estiverem configuradas
+if os.environ.get("DATABASE_URL") or os.environ.get("POSTGRES_DB"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.environ.get("POSTGRES_DB", "chamaia"),
+            "USER": os.environ.get("POSTGRES_USER", "postgres"),
+            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
+            "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
+            "PORT": os.environ.get("POSTGRES_PORT", "5432"),
+        }
     }
-}
+else:
+    # Fallback para SQLite em desenvolvimento
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation
@@ -173,6 +205,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
 
 # Simple JWT
@@ -199,7 +232,13 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "anon": "100/hour",
     "user": "1000/hour",
     "chamado_publico": "10/hour",
+    "chamado_publico_ia": "30/hour",
     "chamado_consulta": "30/minute",
+    # Security throttles
+    "login": "5/min",  # Proteção contra brute-force
+    "password_reset": "3/hour",  # Proteção contra spam
+    "authenticated": "1000/hour",  # Limite geral para usuários autenticados
+    "strict_anon": "10/min",  # Limite estrito para endpoints públicos sensíveis
     "chamado_admin": "1000/hour",
 }
 
@@ -234,3 +273,185 @@ LOGGING = {
         },
     },
 }
+
+# Gemini (Google AI) Configuration
+# CRITICAL: Set GEMINI_API_KEY in environment variables
+# Get your API key at: https://makersuite.google.com/app/apikey
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    import warnings
+    warnings.warn(
+        "GEMINI_API_KEY not set! IA features will fail. "
+        "Set it in your .env file or environment variables."
+    )
+
+IA_MODEL = os.environ.get("IA_MODEL", "gemini-1.5-flash")
+IA_EMBEDDING_MODEL = "models/text-embedding-004"
+IA_SIMILARITY_THRESHOLD = 0.85
+
+# Cache Configuration
+# Usa Redis se REDIS_CACHE_URL estiver definido, senao usa cache em memoria
+if os.environ.get("REDIS_CACHE_URL"):
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": os.environ["REDIS_CACHE_URL"],
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "chamaia-cache",
+        }
+    }
+
+# Celery Configuration
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutos
+CELERY_TASK_ALWAYS_EAGER = os.environ.get("CELERY_TASK_ALWAYS_EAGER", "False").lower() == "true"
+
+# Celery Beat Schedule
+CELERY_BEAT_SCHEDULE = {
+    "reprocessar-chamados-pendentes": {
+        "task": "chamados.tasks.reprocessar_chamados_pendentes",
+        "schedule": 10 * 60,  # a cada 10 minutos
+    },
+}
+
+# Django Channels Configuration
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")],
+        },
+    },
+}
+
+# Webhook Configuration
+# CRITICAL: Set WEBHOOK_ENCRYPTION_KEY in environment variables
+# Generate key with: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+WEBHOOK_ENCRYPTION_KEY = os.environ.get("WEBHOOK_ENCRYPTION_KEY")
+if not WEBHOOK_ENCRYPTION_KEY:
+    import warnings
+    warnings.warn(
+        "WEBHOOK_ENCRYPTION_KEY not set! Webhook URLs will not be encrypted. "
+        "Generate one with: python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
+    )
+
+# Email Configuration
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.environ.get("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 587))
+EMAIL_USE_TLS = os.environ.get("EMAIL_USE_TLS", "True").lower() == "true"
+EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.environ.get("DEFAULT_FROM_EMAIL", "ChamaNF Suporte <suporte@chamanf.com.br>")
+
+# URL base do site (frontend) para links em e-mails
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+
+# drf-spectacular Settings
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Chama IA API",
+    "DESCRIPTION": "API completa para sistema de chamados com IA integrada",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": r"/api/v[0-9]",
+    "SERVE_AUTHENTICATION": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
+    "SERVE_PERMISSIONS": ["rest_framework.permissions.AllowAny"],
+    "SWAGGER_UI_SETTINGS": {
+        "deepLinking": True,
+        "persistAuthorization": True,
+        "displayOperationId": True,
+        "filter": True,
+    },
+    "CONTACT": {
+        "name": "Equipe Chama IA",
+        "email": "suporte@chamanf.com.br",
+    },
+    "LICENSE": {
+        "name": "Proprietary",
+    },
+    "TAGS": [
+        {"name": "Autenticação", "description": "Endpoints de login, logout e gestão de tokens JWT"},
+        {"name": "Autenticação - Recuperação de Senha", "description": "Fluxo completo de recuperação de senha por e-mail com tokens seguros"},
+        {"name": "Gestão de Usuários", "description": "CRUD de usuários com controle de permissões baseado em roles (Admin/Atendente/Cliente)"},
+        {"name": "Chamados - Administração", "description": "Gestão administrativa de chamados/tickets (requer autenticação)"},
+        {"name": "Chamados - Endpoints Públicos", "description": "Endpoints públicos para abertura e consulta de chamados sem autenticação"},
+        {"name": "Clientes", "description": "Gestão de empresas/clientes corporativos"},
+        {"name": "Comentários", "description": "Sistema de comentários em chamados"},
+        {"name": "Anexos", "description": "Upload e download de arquivos anexados aos chamados"},
+        {"name": "Notificações", "description": "Sistema de notificações em tempo real (WebSocket)"},
+        {"name": "Webhooks", "description": "Configuração de webhooks para integração com Discord, Slack e outros serviços"},
+    ],
+}
+
+
+# ============================================
+# Sentry - Error Tracking & Performance Monitoring
+# ============================================
+
+# ============================================
+# Health Check Configuration
+# ============================================
+
+HEALTH_CHECK = {
+    'DISK_USAGE_MAX': 90,  # Alerta se disco >90%
+    'MEMORY_MIN': 100,  # Mínimo 100MB livre
+}
+
+# Adicionar custom health checks
+# Para ativar o Celery health check, adicione ao INSTALLED_APPS:
+# "core.health_checks.CeleryHealthCheck"
+
+
+# ============================================
+# Sentry - Error Tracking & Performance Monitoring
+# ============================================
+
+SENTRY_DSN = os.environ.get("SENTRY_DSN")
+SENTRY_ENVIRONMENT = os.environ.get("SENTRY_ENVIRONMENT", "development")
+
+if SENTRY_DSN:
+    import sentry_sdk
+    from sentry_sdk.integrations.django import DjangoIntegration
+    from sentry_sdk.integrations.celery import CeleryIntegration
+    from sentry_sdk.integrations.redis import RedisIntegration
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        integrations=[
+            DjangoIntegration(),
+            CeleryIntegration(),
+            RedisIntegration(),
+        ],
+        # Performance Monitoring
+        traces_sample_rate=0.1 if not DEBUG else 0.0,  # 10% em produção, 0% em dev
+
+        # Profiling
+        profiles_sample_rate=0.1 if not DEBUG else 0.0,
+
+        # Environment
+        environment=SENTRY_ENVIRONMENT,
+
+        # Release tracking (usar versão do git em produção)
+        release=os.environ.get("SENTRY_RELEASE", "dev"),
+
+        # Filtrar dados sensíveis
+        send_default_pii=False,
+
+        # Capturar SQL queries
+        enable_tracing=True,
+    )

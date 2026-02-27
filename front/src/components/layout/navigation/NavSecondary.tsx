@@ -14,6 +14,7 @@ interface NavItem {
   title: string
   url: string
   icon: LucideIcon
+  external?: boolean
 }
 
 interface NavSecondaryProps extends React.ComponentProps<typeof SidebarGroup> {
@@ -28,7 +29,11 @@ export function NavSecondary({ items, ...props }: NavSecondaryProps) {
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
               <SidebarMenuButton asChild size="sm">
-                <Link href={item.url}>
+                <Link
+                  href={item.url}
+                  target={item.external ? "_blank" : undefined}
+                  rel={item.external ? "noopener noreferrer" : undefined}
+                >
                   <item.icon />
                   <span>{item.title}</span>
                 </Link>

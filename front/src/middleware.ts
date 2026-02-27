@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
-const PUBLIC_ROUTES = ["/login", "/forgot-password", "/reset-password"]
+const PUBLIC_ROUTES = ["/login", "/forgot-password", "/reset-password", "/atendimento", "/acompanhar"]
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -26,7 +26,11 @@ export function middleware(request: NextRequest) {
       : NextResponse.redirect(new URL("/login", request.url))
   }
 
-  if (isPublicRoute && hasTokens) {
+  // Rotas publicas que NAO redirecionam para dashboard mesmo logado
+  const alwaysPublicRoutes = ["/atendimento", "/acompanhar"]
+  const isAlwaysPublic = alwaysPublicRoutes.some((route) => pathname.startsWith(route))
+
+  if (isPublicRoute && hasTokens && !isAlwaysPublic) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 

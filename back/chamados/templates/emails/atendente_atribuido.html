@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Novo Chamado Atribuído</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 30px;
+            border: 1px solid #ddd;
+        }
+        .info-box {
+            background: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #4facfe;
+            border-radius: 4px;
+        }
+        .priority-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .priority-urgente { background: #f44336; color: white; }
+        .priority-alta { background: #ff9800; color: white; }
+        .priority-media { background: #2196f3; color: white; }
+        .priority-baixa { background: #4caf50; color: white; }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #4facfe;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 12px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📌 Novo Chamado Atribuído</h1>
+    </div>
+
+    <div class="content">
+        <p>Olá <strong>{{ atendente_nome }}</strong>,</p>
+
+        <p>Um novo chamado foi atribuído para você!</p>
+
+        <div class="info-box">
+            <div style="font-weight: bold; color: #4facfe; margin-bottom: 5px;">📋 Protocolo:</div>
+            <div style="font-size: 20px; font-weight: bold; color: #4facfe;">#{{ protocolo }}</div>
+        </div>
+
+        <div class="info-box">
+            <div style="font-weight: bold; color: #4facfe; margin-bottom: 5px;">👤 Cliente:</div>
+            <div>{{ cliente_nome }}</div>
+        </div>
+
+        <div class="info-box">
+            <div style="font-weight: bold; color: #4facfe; margin-bottom: 5px;">📌 Assunto:</div>
+            <div>{{ assunto }}</div>
+        </div>
+
+        <div class="info-box">
+            <div style="font-weight: bold; color: #4facfe; margin-bottom: 5px;">📝 Descrição:</div>
+            <div>{{ descricao }}</div>
+        </div>
+
+        <div class="info-box">
+            <div style="font-weight: bold; color: #4facfe; margin-bottom: 5px;">🏷️ Tipo:</div>
+            <div>{{ tipo }}</div>
+        </div>
+
+        <div class="info-box">
+            <div style="font-weight: bold; color: #4facfe; margin-bottom: 5px;">⚡ Prioridade:</div>
+            <div>
+                <span class="priority-badge priority-{{ prioridade|lower }}">{{ prioridade }}</span>
+            </div>
+        </div>
+
+        <div class="info-box">
+            <div style="font-weight: bold; color: #4facfe; margin-bottom: 5px;">📊 Status:</div>
+            <div>{{ status }}</div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="{{ frontend_url }}/chamados/{{ protocolo }}" class="button">
+                🚀 Atender Chamado
+            </a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Este é um email automático, não responda.</p>
+        <p>&copy; 2026 Chama IA - Sistema de Chamados</p>
+    </div>
+</body>
+</html>

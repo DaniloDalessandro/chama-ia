@@ -12,6 +12,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { ThemeToggle } from "@/components/common/ThemeToggle"
+import { NotificationIcon } from "./NotificationIcon"
 
 const routeNames: Record<string, string> = {
   dashboard: "Dashboard",
@@ -51,7 +52,8 @@ export function Header() {
         </BreadcrumbList>
       </Breadcrumb>
 
-      <div className="ml-auto">
+      <div className="ml-auto flex items-center gap-2">
+        <NotificationIcon />
         <ThemeToggle />
       </div>
     </header>

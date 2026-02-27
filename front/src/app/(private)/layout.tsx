@@ -1,10 +1,10 @@
 "use client"
 
 import { AuthGuard } from "@/components/auth/AuthGuard"
-import { DataRefreshProvider } from "@/context/DataRefreshContext"
+import { DataRefreshProvider } from "@/contexts/DataRefreshContext"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/layout/AppSidebar"
-import { Header } from "@/components/layout/Header"
+import { AppSidebar } from "@/components/layout/sidebar/AppSidebar"
+import { Header } from "@/components/layout/header/Header"
 
 export default function PrivateLayout({
   children,
