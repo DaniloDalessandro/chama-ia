@@ -286,17 +286,24 @@ LOGGING = {
 # Gemini (Google AI) Configuration
 # CRITICAL: Set GEMINI_API_KEY in environment variables
 # Get your API key at: https://makersuite.google.com/app/apikey
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-if not GEMINI_API_KEY:
+# xAI Grok (classificacao principal)
+XAI_API_KEY = os.environ.get("XAI_API_KEY")
+XAI_MODEL = os.environ.get("XAI_MODEL", "grok-3-mini")
+
+if not XAI_API_KEY:
     import warnings
     warnings.warn(
-        "GEMINI_API_KEY not set! IA features will fail. "
-        "Set it in your .env file or environment variables."
+        "XAI_API_KEY not set! IA classification via Grok will be unavailable. "
+        "Get a free key at https://console.x.ai"
     )
 
-IA_MODEL = os.environ.get("IA_MODEL", "gemini-1.5-flash")
+# Google Gemini (embeddings para similaridade - opcional)
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 IA_EMBEDDING_MODEL = "models/text-embedding-004"
 IA_SIMILARITY_THRESHOLD = 0.85
+
+# Compatibilidade retroativa
+IA_MODEL = os.environ.get("IA_MODEL", XAI_MODEL)
 
 # Cache Configuration
 # Usa Redis se REDIS_CACHE_URL estiver definido, senao usa cache em memoria

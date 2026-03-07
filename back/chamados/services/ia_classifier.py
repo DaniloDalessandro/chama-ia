@@ -1,6 +1,6 @@
 """
-Servico de classificacao de chamados usando IA com LangChain + Google Gemini.
-Inclui classificacao automatica e deteccao de chamados recorrentes via embeddings.
+Servico de classificacao de chamados usando IA com LangChain + xAI Grok.
+Classificacao via Grok (grok-3-mini). Similaridade via Google Embeddings (opcional).
 """
 
 import json
@@ -13,10 +13,10 @@ import numpy as np
 from django.conf import settings
 from django.utils import timezone
 
-from langchain_google_genai import ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings
+from langchain_xai import ChatXAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import JsonOutputParser
-from langchain_core.pydantic_v1 import BaseModel, Field
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
 
@@ -81,27 +81,24 @@ class ClassificacaoOutput(BaseModel):
 
 class IAClassifierService:
     """
-    Servico para classificar chamados usando LangChain + Google Gemini.
+    Servico para classificar chamados usando LangChain + xAI Grok.
     """
 
     def __init__(self):
         self.llm = None
         self.chain = None
 
-        if settings.GEMINI_API_KEY:
+        if settings.XAI_API_KEY:
             try:
-                # Inicializar LangChain com Gemini
-                self.llm = ChatGoogleGenerativeAI(
-                    model=settings.IA_MODEL,
-                    google_api_key=settings.GEMINI_API_KEY,
+                self.llm = ChatXAI(
+                    model=settings.XAI_MODEL,
+                    xai_api_key=settings.XAI_API_KEY,
                     temperature=0.3,
-                    max_output_tokens=500,
+                    max_tokens=500,
                 )
 
-                # Criar parser de output estruturado
                 parser = JsonOutputParser(pydantic_object=ClassificacaoOutput)
 
-                # Criar prompt template
                 categorias_str = "\n".join([f"- {k}: {v}" for k, v in CATEGORIAS.items()])
 
                 prompt = PromptTemplate(
@@ -134,13 +131,12 @@ Responda APENAS com o JSON no formato especificado acima.""",
                     },
                 )
 
-                # Criar chain
                 self.chain = prompt | self.llm | parser
 
-                logger.info("LangChain inicializado com sucesso (Gemini)")
+                logger.info(f"LangChain inicializado com sucesso (xAI Grok - {settings.XAI_MODEL})")
 
             except Exception as e:
-                logger.error(f"Erro ao inicializar LangChain: {e}")
+                logger.error(f"Erro ao inicializar LangChain com Grok: {e}")
 
     def _check_keywords_financeiro(self, texto: str) -> bool:
         """Verifica se o texto contem keywords financeiras."""
@@ -149,7 +145,7 @@ Responda APENAS com o JSON no formato especificado acima.""",
 
     def classificar(self, assunto: str, descricao: str) -> ClassificacaoResult:
         """
-        Classifica um chamado usando LangChain + Gemini.
+        Classifica um chamado usando LangChain + xAI Grok.
 
         Args:
             assunto: Assunto do chamado
@@ -159,17 +155,15 @@ Responda APENAS com o JSON no formato especificado acima.""",
             ClassificacaoResult com a classificacao
         """
         if not self.chain:
-            logger.warning("LangChain nao configurado. Usando classificacao padrao.")
+            logger.warning("LangChain (Grok) nao configurado. Usando classificacao padrao.")
             return self._classificacao_padrao(assunto, descricao)
 
         try:
-            # Invocar chain
             result = self.chain.invoke({
                 "assunto": assunto,
                 "descricao": descricao
             })
 
-            # Verificar regra de financeiro = urgente
             texto_completo = f"{assunto} {descricao}"
             is_financeiro = result.get("is_financeiro", False) or self._check_keywords_financeiro(texto_completo)
 
@@ -188,7 +182,7 @@ Responda APENAS com o JSON no formato especificado acima.""",
             )
 
         except Exception as e:
-            logger.error(f"Erro ao classificar com LangChain: {e}")
+            logger.error(f"Erro ao classificar com Grok: {e}")
             return self._classificacao_padrao(assunto, descricao)
 
     def _classificacao_padrao(self, assunto: str, descricao: str) -> ClassificacaoResult:
@@ -196,7 +190,6 @@ Responda APENAS com o JSON no formato especificado acima.""",
         texto = f"{assunto} {descricao}".lower()
         is_financeiro = self._check_keywords_financeiro(texto)
 
-        # Detectar categoria baseada em keywords
         categoria = "outros"
         if any(kw in texto for kw in ["nota fiscal", "nf-e", "nfe", "boleto"]):
             categoria = "nota_fiscal"
@@ -224,8 +217,8 @@ Responda APENAS com o JSON no formato especificado acima.""",
 
 class SimilarityService:
     """
-    Servico para detectar chamados recorrentes usando LangChain Embeddings.
-    Inclui cache para evitar reprocessar textos identicos.
+    Servico para detectar chamados recorrentes usando LangChain Embeddings (Google).
+    Funciona apenas se GEMINI_API_KEY estiver configurado.
     """
 
     def __init__(self):
@@ -235,152 +228,93 @@ class SimilarityService:
 
         if settings.GEMINI_API_KEY:
             try:
-                # Inicializar LangChain Embeddings com Gemini
+                from langchain_google_genai import GoogleGenerativeAIEmbeddings
                 self.embeddings = GoogleGenerativeAIEmbeddings(
                     model=self.model,
                     google_api_key=settings.GEMINI_API_KEY,
                     task_type="retrieval_document"
                 )
-                logger.info("LangChain Embeddings inicializado com sucesso (Gemini)")
+                logger.info("LangChain Embeddings inicializado (Google Gemini)")
             except Exception as e:
-                logger.error(f"Erro ao inicializar LangChain Embeddings: {e}")
+                logger.error(f"Erro ao inicializar embeddings: {e}")
+        else:
+            logger.info("GEMINI_API_KEY nao configurado - deteccao de similaridade desativada")
 
     def _calcular_hash(self, texto: str) -> str:
-        """Calcula hash SHA-256 do texto normalizado."""
         texto_normalizado = texto.strip().lower()
         return hashlib.sha256(texto_normalizado.encode('utf-8')).hexdigest()
 
     def _buscar_cache(self, texto_hash: str) -> Optional[list[float]]:
-        """Busca embedding no cache pelo hash do texto."""
         from chamados.models import EmbeddingCache
-
         try:
             cache = EmbeddingCache.objects.filter(
                 texto_hash=texto_hash,
                 modelo=self.model
             ).first()
-
             if cache:
-                # Atualizar contador de uso
                 cache.uso_count += 1
                 cache.save(update_fields=['uso_count', 'last_used_at'])
-                logger.info(f"Cache HIT para embedding (hash: {texto_hash[:8]}..., usos: {cache.uso_count})")
                 return cache.embedding_vector
-
             return None
         except Exception as e:
             logger.warning(f"Erro ao buscar cache: {e}")
             return None
 
     def _salvar_cache(self, texto_hash: str, embedding: list[float]) -> None:
-        """Salva embedding no cache."""
         from chamados.models import EmbeddingCache
-
         try:
             EmbeddingCache.objects.update_or_create(
                 texto_hash=texto_hash,
                 modelo=self.model,
-                defaults={
-                    'embedding_vector': embedding,
-                }
+                defaults={'embedding_vector': embedding}
             )
-            logger.info(f"Cache SAVE para embedding (hash: {texto_hash[:8]}...)")
         except Exception as e:
             logger.warning(f"Erro ao salvar cache: {e}")
 
     def gerar_embedding(self, texto: str, use_cache: bool = True) -> tuple[list[float], str]:
-        """
-        Gera embedding para um texto usando LangChain + Gemini, com cache.
-
-        Args:
-            texto: Texto para gerar embedding
-            use_cache: Se True, verifica e usa cache
-
-        Returns:
-            Tupla (embedding, texto_hash)
-        """
         texto_truncado = texto[:8000]
         texto_hash = self._calcular_hash(texto_truncado)
 
-        # Verificar cache primeiro
         if use_cache:
-            cached_embedding = self._buscar_cache(texto_hash)
-            if cached_embedding:
-                return cached_embedding, texto_hash
+            cached = self._buscar_cache(texto_hash)
+            if cached:
+                return cached, texto_hash
 
-        # Cache miss - gerar novo embedding
         if not self.embeddings:
-            logger.warning("LangChain Embeddings nao configurado. Retornando embedding vazio.")
             return [], texto_hash
 
         try:
-            # Usar LangChain para gerar embedding
             embedding = self.embeddings.embed_query(texto_truncado)
-
-            # Salvar no cache
             if use_cache and embedding:
                 self._salvar_cache(texto_hash, embedding)
-
-            logger.info(f"Cache MISS - embedding gerado via LangChain (hash: {texto_hash[:8]}...)")
             return embedding, texto_hash
-
         except Exception as e:
-            logger.error(f"Erro ao gerar embedding com LangChain: {e}")
+            logger.error(f"Erro ao gerar embedding: {e}")
             return [], texto_hash
 
     def calcular_similaridade(self, embedding1: list[float], embedding2: list[float]) -> float:
-        """
-        Calcula similaridade de cosseno entre dois embeddings.
-
-        Args:
-            embedding1: Primeiro embedding
-            embedding2: Segundo embedding
-
-        Returns:
-            Score de similaridade (0 a 1)
-        """
         if not embedding1 or not embedding2:
             return 0.0
-
         try:
             vec1 = np.array(embedding1)
             vec2 = np.array(embedding2)
-
-            # Similaridade de cosseno
             dot_product = np.dot(vec1, vec2)
             norm1 = np.linalg.norm(vec1)
             norm2 = np.linalg.norm(vec2)
-
             if norm1 == 0 or norm2 == 0:
                 return 0.0
-
             return float(dot_product / (norm1 * norm2))
         except Exception as e:
             logger.error(f"Erro ao calcular similaridade: {e}")
             return 0.0
 
     def buscar_similares(self, chamado_id: int, embedding: list[float]) -> SimilaridadeResult:
-        """
-        Busca chamados similares resolvidos.
-
-        Args:
-            chamado_id: ID do chamado atual (para excluir da busca)
-            embedding: Embedding do chamado atual
-
-        Returns:
-            SimilaridadeResult com o chamado mais similar (se houver)
-        """
         from chamados.models import Chamado, EmbeddingChamado
 
         if not embedding:
-            return SimilaridadeResult(
-                chamado_similar_id=None,
-                similaridade_score=0.0,
-                is_recorrente=False,
-            )
+            return SimilaridadeResult(chamado_similar_id=None, similaridade_score=0.0, is_recorrente=False)
 
         try:
-            # Buscar chamados resolvidos/fechados com embedding
             chamados_resolvidos = EmbeddingChamado.objects.filter(
                 chamado__status__in=["resolvido", "fechado"]
             ).exclude(chamado_id=chamado_id).select_related("chamado")
@@ -401,26 +335,14 @@ class SimilarityService:
                 similaridade_score=melhor_score,
                 is_recorrente=is_recorrente,
             )
-
         except Exception as e:
             logger.error(f"Erro ao buscar chamados similares: {e}")
-            return SimilaridadeResult(
-                chamado_similar_id=None,
-                similaridade_score=0.0,
-                is_recorrente=False,
-            )
+            return SimilaridadeResult(chamado_similar_id=None, similaridade_score=0.0, is_recorrente=False)
 
 
 def processar_chamado_completo(chamado_id: int) -> dict:
     """
-    Processa um chamado com IA: classifica e busca similares.
-    Usa LangChain para orquestrar as operacoes.
-
-    Args:
-        chamado_id: ID do chamado a processar
-
-    Returns:
-        Dicionario com resultados do processamento
+    Processa um chamado com IA: classifica (Grok) e busca similares (embeddings).
     """
     from chamados.models import Chamado, EmbeddingChamado, HistoricoChamado
 
@@ -433,7 +355,7 @@ def processar_chamado_completo(chamado_id: int) -> dict:
     classifier = IAClassifierService()
     similarity = SimilarityService()
 
-    # 1. Classificar chamado
+    # 1. Classificar chamado com Grok
     classificacao = classifier.classificar(chamado.assunto, chamado.descricao)
 
     # 2. Gerar embedding (com cache)
@@ -478,11 +400,14 @@ def processar_chamado_completo(chamado_id: int) -> dict:
         )
 
     # 6. Registrar no historico
-    descricao_historico = f"Chamado processado por IA (LangChain + Gemini). Categoria: {classificacao.categoria}, Prioridade sugerida: {classificacao.prioridade_sugerida}"
+    descricao_historico = (
+        f"Chamado processado por IA (LangChain + xAI Grok/{settings.XAI_MODEL}). "
+        f"Categoria: {classificacao.categoria}, Prioridade sugerida: {classificacao.prioridade_sugerida}"
+    )
     if classificacao.is_financeiro_urgente:
         descricao_historico += " (Detectado como financeiro - prioridade URGENTE)"
     if similares.is_recorrente:
-        descricao_historico += f" (Chamado recorrente detectado - similaridade: {similares.similaridade_score:.2%})"
+        descricao_historico += f" (Chamado recorrente - similaridade: {similares.similaridade_score:.2%})"
 
     HistoricoChamado.objects.create(
         chamado=chamado,
@@ -490,9 +415,8 @@ def processar_chamado_completo(chamado_id: int) -> dict:
         descricao=descricao_historico,
     )
 
-    # 6.1 Registrar auto-aplicacao de prioridade pela IA
     if prioridade_auto_aplicada:
-        descricao_prioridade = f"Prioridade alterada automaticamente pela IA: {old_prioridade} → {classificacao.prioridade_sugerida}"
+        descricao_prioridade = f"Prioridade alterada automaticamente pela IA (Grok): {old_prioridade} -> {classificacao.prioridade_sugerida}"
         if classificacao.is_financeiro_urgente:
             descricao_prioridade += " (detectado como chamado financeiro)"
         HistoricoChamado.objects.create(
