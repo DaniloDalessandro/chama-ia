@@ -59,7 +59,7 @@ services:
       EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
       EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
     ports:
-      - "8000:8000"
+      - "8001:8000"
     volumes:
       - media_files:/app/media
       - backend_logs:/app/logs
@@ -139,7 +139,7 @@ services:
       BACKEND_URL: http://backend:8000
       NODE_ENV: production
     ports:
-      - "3000:3000"
+      - "4000:3000"
     depends_on:
       - backend
     restart: unless-stopped
