@@ -27,3 +27,4 @@ cryptography>=46.0.0  # Encryption for webhooks
 sentry-sdk>=1.40.0  # Error tracking and performance monitoring
 django-health-check>=3.17.0  # Health check endpoint for monitoring
 whitenoise>=6.6.0  # Serve static files without nginx
+python-dotenv>=1.0.0  # Load .env files
