@@ -34,13 +34,30 @@ services:
       context: ./back
       dockerfile: Dockerfile
     container_name: chamaia-backend
-    env_file:
-      - ./back/.env.prod
     environment:
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: ${DEBUG:-False}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-82.25.75.110}
+      POSTGRES_DB: ${POSTGRES_DB:-chamaia}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       REDIS_CACHE_URL: redis://redis:6379/1
+      CELERY_TASK_ALWAYS_EAGER: "False"
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://82.25.75.110:3000}
+      WEBHOOK_ENCRYPTION_KEY: ${WEBHOOK_ENCRYPTION_KEY}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      IA_MODEL: ${IA_MODEL:-gemini-1.5-flash}
+      FRONTEND_URL: ${FRONTEND_URL:-http://82.25.75.110:3000}
+      EMAIL_BACKEND: ${EMAIL_BACKEND:-django.core.mail.backends.console.EmailBackend}
+      EMAIL_HOST: ${EMAIL_HOST:-smtp.gmail.com}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-True}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
     ports:
       - "8000:8000"
     volumes:
@@ -61,13 +78,19 @@ services:
       context: ./back
       dockerfile: Dockerfile
     container_name: chamaia-celery
-    env_file:
-      - ./back/.env.prod
     environment:
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: "False"
+      POSTGRES_DB: ${POSTGRES_DB:-chamaia}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       REDIS_CACHE_URL: redis://redis:6379/1
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      WEBHOOK_ENCRYPTION_KEY: ${WEBHOOK_ENCRYPTION_KEY}
     volumes:
       - media_files:/app/media
       - backend_logs:/app/logs
@@ -84,13 +107,18 @@ services:
       context: ./back
       dockerfile: Dockerfile
     container_name: chamaia-celery-beat
-    env_file:
-      - ./back/.env.prod
     environment:
+      SECRET_KEY: ${SECRET_KEY}
+      DEBUG: "False"
+      POSTGRES_DB: ${POSTGRES_DB:-chamaia}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       REDIS_CACHE_URL: redis://redis:6379/1
+      WEBHOOK_ENCRYPTION_KEY: ${WEBHOOK_ENCRYPTION_KEY}
     volumes:
       - media_files:/app/media
       - backend_logs:/app/logs
@@ -109,6 +137,7 @@ services:
     container_name: chamaia-frontend
     environment:
       BACKEND_URL: http://backend:8000
+      NODE_ENV: production
     ports:
       - "3000:3000"
     depends_on:
