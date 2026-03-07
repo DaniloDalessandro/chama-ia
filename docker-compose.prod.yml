@@ -49,8 +49,9 @@ services:
       CELERY_TASK_ALWAYS_EAGER: "False"
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://82.25.75.110:3000}
       WEBHOOK_ENCRYPTION_KEY: ${WEBHOOK_ENCRYPTION_KEY}
+      XAI_API_KEY: ${XAI_API_KEY:-}
+      XAI_MODEL: ${XAI_MODEL:-grok-3-mini}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-      IA_MODEL: ${IA_MODEL:-gemini-1.5-flash}
       FRONTEND_URL: ${FRONTEND_URL:-http://82.25.75.110:3000}
       EMAIL_BACKEND: ${EMAIL_BACKEND:-django.core.mail.backends.console.EmailBackend}
       EMAIL_HOST: ${EMAIL_HOST:-smtp.gmail.com}
@@ -89,6 +90,8 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       REDIS_CACHE_URL: redis://redis:6379/1
+      XAI_API_KEY: ${XAI_API_KEY:-}
+      XAI_MODEL: ${XAI_MODEL:-grok-3-mini}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       WEBHOOK_ENCRYPTION_KEY: ${WEBHOOK_ENCRYPTION_KEY}
     volumes:
@@ -118,6 +121,8 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       REDIS_CACHE_URL: redis://redis:6379/1
+      XAI_API_KEY: ${XAI_API_KEY:-}
+      XAI_MODEL: ${XAI_MODEL:-grok-3-mini}
       WEBHOOK_ENCRYPTION_KEY: ${WEBHOOK_ENCRYPTION_KEY}
     volumes:
       - media_files:/app/media
