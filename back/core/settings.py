@@ -32,6 +32,10 @@ DEBUG = os.environ.get("DEBUG", "False").lower() in ("true", "1", "yes")
 # IMPORTANT: In production, set ALLOWED_HOSTS via environment variable
 # Example: ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+# Internal Docker hosts always allowed (frontend proxy, celery, etc.)
+for _host in ["backend", "localhost", "127.0.0.1"]:
+    if _host not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS.append(_host)
 
 
 # Application definition
