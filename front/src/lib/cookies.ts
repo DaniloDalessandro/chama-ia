@@ -94,14 +94,14 @@ export function getCookie(name: string): string | null {
  * Como estamos setando via JavaScript, usamos todas as outras proteções disponíveis.
  */
 export function setAuthTokens(accessToken: string, refreshToken?: string): void {
-  const isProduction = process.env.NODE_ENV === 'production'
+  const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:'
 
   // Access token (15 minutos)
   setSecureCookie('access_token', accessToken, {
     path: '/',
     maxAge: 15 * 60, // 15 minutos
-    secure: isProduction, // Apenas HTTPS em produção
-    sameSite: 'strict' // Máxima proteção contra CSRF
+    secure: isHttps, // Apenas HTTPS quando disponível
+    sameSite: 'lax'
   })
 
   // Refresh token (7 dias)
@@ -109,8 +109,8 @@ export function setAuthTokens(accessToken: string, refreshToken?: string): void 
     setSecureCookie('refresh_token', refreshToken, {
       path: '/',
       maxAge: 7 * 24 * 60 * 60, // 7 dias
-      secure: isProduction,
-      sameSite: 'strict'
+      secure: isHttps,
+      sameSite: 'lax'
     })
   }
 }
