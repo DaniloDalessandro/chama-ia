@@ -174,6 +174,14 @@ class Chamado(models.Model):
     ia_processed_at = models.DateTimeField(null=True, blank=True, verbose_name="Processado IA em")
 
     # Deteccao de recorrencia
+    # Rastreamento de origem por email (evitar reprocessar o mesmo email)
+    email_message_id = models.CharField(
+        max_length=500,
+        blank=True,
+        db_index=True,
+        verbose_name="Message-ID do Email"
+    )
+
     is_recorrente = models.BooleanField(default=False, verbose_name="Chamado Recorrente")
     chamado_similar_ref = models.ForeignKey(
         "self",
@@ -517,7 +525,7 @@ class Notification(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.user.username} - {self.title}"
+        return f"{self.user.email} - {self.title}"
 
     def mark_as_read(self):
         """Marca a notificacao como lida."""

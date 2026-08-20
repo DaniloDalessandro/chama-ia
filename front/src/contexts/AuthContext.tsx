@@ -124,6 +124,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           refreshAccessToken().then((success) => {
             if (success) {
               setUser(JSON.parse(storedUser))
+            } else {
+              clearAuth() // limpa localStorage E cookies para evitar loop middleware
             }
             setIsLoading(false)
           })
@@ -133,13 +135,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setAccessToken(storedToken)
         setUser(JSON.parse(storedUser))
       } catch {
-        localStorage.removeItem("access_token")
-        localStorage.removeItem("refresh_token")
-        localStorage.removeItem("user")
+        clearAuth() // token inválido — limpa tudo incluindo cookies
       }
+    } else {
+      clearAuth() // sem tokens — garante que cookies também sejam limpos
     }
     setIsLoading(false)
-  }, [refreshAccessToken])
+  }, [refreshAccessToken, clearAuth])
 
   // Auto-refresh token before expiry
   useEffect(() => {

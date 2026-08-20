@@ -48,7 +48,7 @@ class NotificationService:
         )
 
         logger.info(
-            f"Notificacao criada: {notification.id} para usuario {user.username}"
+            f"Notificacao criada: {notification.id} para usuario {user.email}"
         )
 
         # Fazer broadcast via WebSocket
@@ -89,7 +89,7 @@ class NotificationService:
 
         try:
             async_to_sync(channel_layer.group_send)(group_name, payload)
-            logger.info(f"Notificacao enviada via WebSocket para {user.username}")
+            logger.info(f"Notificacao enviada via WebSocket para {user.email}")
         except Exception as e:
             logger.error(f"Erro ao enviar notificacao via WebSocket: {e}")
 
@@ -208,7 +208,7 @@ class NotificationService:
             logger.info(f"Notificacao {notification_id} marcada como lida")
             return True
         except Notification.DoesNotExist:
-            logger.warning(f"Notificacao {notification_id} nao encontrada para usuario {user.username}")
+            logger.warning(f"Notificacao {notification_id} nao encontrada para usuario {user.email}")
             return False
 
     @staticmethod
@@ -232,5 +232,5 @@ class NotificationService:
             read_at=timezone.now()
         )
 
-        logger.info(f"{count} notificacoes marcadas como lidas para {user.username}")
+        logger.info(f"{count} notificacoes marcadas como lidas para {user.email}")
         return count

@@ -45,7 +45,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
         logger.info(
-            f"WebSocket conectado para usuario {self.user.username} "
+            f"WebSocket conectado para usuario {self.user.email} "
             f"no grupo {self.group_name}"
         )
 
@@ -67,7 +67,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             )
 
             logger.info(
-                f"WebSocket desconectado para usuario {self.user.username} "
+                f"WebSocket desconectado para usuario {self.user.email} "
                 f"(close_code: {close_code})"
             )
 
@@ -145,7 +145,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         }))
 
         logger.debug(
-            f"Notificacao enviada via WebSocket para {self.user.username}: "
+            f"Notificacao enviada via WebSocket para {self.user.email}: "
             f"{notification.get('title')}"
         )
 

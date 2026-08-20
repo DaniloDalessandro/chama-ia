@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api/client";
+import { useAuthContext } from "@/contexts/AuthContext";
 
 // Types
 export interface Notification {
@@ -38,10 +39,11 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const WS_BASE_URL = API_BASE_URL.replace("http://", "ws://").replace("https://", "wss://");
 
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuthContext();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
@@ -51,12 +53,12 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   // Fetch notifications from API
   const fetchNotifications = useCallback(async () => {
     try {
-      const response = await apiClient.get("/api/v1/chamados/notifications");
-      setNotifications(response.data.results || response.data);
+      const response = await apiClient.get<any>("/chamados/notifications");
+      setNotifications(response.results || response);
 
       // Fetch unread count
-      const countResponse = await apiClient.get("/api/v1/chamados/notifications/unread-count");
-      setUnreadCount(countResponse.data.count);
+      const countResponse = await apiClient.get<any>("/chamados/notifications/unread-count");
+      setUnreadCount(countResponse.count);
     } catch (error) {
       console.error("Erro ao buscar notificacoes:", error);
     } finally {
@@ -67,7 +69,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   // Mark notification as read
   const markAsRead = useCallback(async (id: string) => {
     try {
-      await apiClient.post(`/api/v1/chamados/notifications/${id}/mark-read`);
+      await apiClient.post(`/chamados/notifications/${id}/mark-read`);
 
       // Update local state
       setNotifications((prev) =>
@@ -85,7 +87,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   // Mark all notifications as read
   const markAllAsRead = useCallback(async () => {
     try {
-      const response = await apiClient.post("/api/v1/chamados/notifications/mark-all-read");
+      const response = await apiClient.post<any>("/chamados/notifications/mark-all-read");
 
       // Update local state
       setNotifications((prev) =>
@@ -98,7 +100,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
       setUnreadCount(0);
 
-      toast.success(`${response.data.count} notificacoes marcadas como lidas`);
+      toast.success(`${response.count} notificacoes marcadas como lidas`);
     } catch (error) {
       console.error("Erro ao marcar todas como lidas:", error);
       toast.error("Erro ao marcar notificacoes");
@@ -209,8 +211,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     return () => clearInterval(pingInterval);
   }, []);
 
-  // Initialize
+  // Initialize — só busca quando autenticado
   useEffect(() => {
+    if (!isAuthenticated) return;
     fetchNotifications();
     connectWebSocket();
 
@@ -227,7 +230,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         wsRef.current = null;
       }
     };
-  }, [fetchNotifications, connectWebSocket]);
+  }, [isAuthenticated, fetchNotifications, connectWebSocket]);
 
   const value: NotificationContextType = {
     notifications,

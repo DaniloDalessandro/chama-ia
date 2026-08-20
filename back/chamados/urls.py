@@ -14,9 +14,12 @@ from .views import (
 )
 
 router = DefaultRouter(trailing_slash=False)
-router.register(r"", ChamadoAdminViewSet, basename="chamado")
+# Specific prefixes MUST be registered before the empty-prefix viewset,
+# otherwise ChamadoAdminViewSet's detail pattern ^(?P<pk>[^/.]+)$ would
+# shadow "notifications" and "webhooks" by matching them as pk values.
 router.register(r"notifications", NotificationViewSet, basename="notification")
 router.register(r"webhooks", WebhookConfigViewSet, basename="webhook")
+router.register(r"", ChamadoAdminViewSet, basename="chamado")
 
 urlpatterns = [
     # Endpoints publicos (sem autenticacao)

@@ -365,3 +365,22 @@ def enviar_email_chamado_concluido_task(self, chamado_id: int, atendente_id: int
         if CELERY_AVAILABLE and hasattr(self, "retry"):
             raise self.retry(exc=exc)
         raise
+
+
+@shared_task(bind=False)
+def verificar_emails_inbox():
+    """
+    Task periodica que le emails nao lidos da caixa de entrada IMAP
+    e cria chamados automaticamente para cada email recebido.
+    Agendada via CELERY_BEAT_SCHEDULE a cada 5 minutos.
+    """
+    from chamados.services.email_ingestion import processar_emails
+
+    logger.info("Iniciando verificacao de emails (IMAP)...")
+    resultado = processar_emails()
+    logger.info(
+        f"Verificacao de emails concluida: "
+        f"processados={resultado.get('processados', 0)}, "
+        f"erros={resultado.get('erros', 0)}"
+    )
+    return resultado

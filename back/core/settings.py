@@ -346,7 +346,21 @@ CELERY_BEAT_SCHEDULE = {
         "task": "chamados.tasks.reprocessar_chamados_pendentes",
         "schedule": 10 * 60,  # a cada 10 minutos
     },
+    "verificar-emails-inbox": {
+        "task": "chamados.tasks.verificar_emails_inbox",
+        "schedule": 5 * 60,  # a cada 5 minutos
+    },
 }
+
+# Configuracao IMAP para leitura de emails recebidos
+# Ative definindo EMAIL_IMAP_ENABLED=True e configurando as variaveis abaixo
+EMAIL_IMAP_ENABLED = os.environ.get("EMAIL_IMAP_ENABLED", "False").lower() == "true"
+EMAIL_IMAP_HOST = os.environ.get("EMAIL_IMAP_HOST", "")
+EMAIL_IMAP_PORT = int(os.environ.get("EMAIL_IMAP_PORT", 993))
+EMAIL_IMAP_USE_SSL = os.environ.get("EMAIL_IMAP_USE_SSL", "True").lower() == "true"
+EMAIL_IMAP_USER = os.environ.get("EMAIL_IMAP_USER", os.environ.get("EMAIL_HOST_USER", ""))
+EMAIL_IMAP_PASSWORD = os.environ.get("EMAIL_IMAP_PASSWORD", os.environ.get("EMAIL_HOST_PASSWORD", ""))
+EMAIL_IMAP_FOLDER = os.environ.get("EMAIL_IMAP_FOLDER", "INBOX")
 
 # Django Channels Configuration
 CHANNEL_LAYERS = {
