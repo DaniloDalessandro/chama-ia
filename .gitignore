@@ -1,0 +1,35 @@
+# Este projeto tem back-end (backend/) e front-end (front/) com seus
+# proprios .gitignore especificos. Este arquivo cobre a raiz do repo
+# e serve de rede de seguranca para padroes comuns.
+
+# Claude Code (configuracao local da maquina, nao deve ser versionada)
+.claude/settings.local.json
+
+# Docker Compose - overrides locais
+docker-compose.override.yml
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+env/
+.venv/
+db.sqlite3
+db.sqlite3-journal
+
+# Node
+node_modules/
+.next/
+npm-debug.log*
+
+# Ambiente / segredos
+.env
+.env.local
+.env.*.local
+
+# IDE / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
