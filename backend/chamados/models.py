@@ -182,6 +182,24 @@ class Chamado(models.Model):
         verbose_name="Message-ID do Email"
     )
 
+    # Vinculo com o atendimento que originou este chamado (quando aplicavel).
+    # O atendimento nunca e apagado/transformado -- e apenas referenciado aqui.
+    atendimento_origem = models.ForeignKey(
+        "atendimento.Atendimento",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="chamados_gerados",
+        verbose_name="Atendimento de origem",
+    )
+    motivo_encaminhamento = models.TextField(blank=True, verbose_name="Motivo do encaminhamento")
+    prioridade_calculada_atendimento = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name="Prioridade calculada no atendimento",
+        help_text="Snapshot da prioridade (ex: P2) no momento da criacao do chamado -- nao muda retroativamente.",
+    )
+
     is_recorrente = models.BooleanField(default=False, verbose_name="Chamado Recorrente")
     chamado_similar_ref = models.ForeignKey(
         "self",
@@ -667,6 +685,10 @@ class EmailIngestionConfig(models.Model):
     apenas uma linha e utilizada (a mais recente).
     """
 
+    class Destino(models.TextChoices):
+        ATENDIMENTO = "atendimento", "Atendimento (fluxo completo com IA/AHP)"
+        CHAMADO = "chamado", "Chamado (fluxo legado direto)"
+
     email = models.EmailField(verbose_name="Email")
     encrypted_password = models.TextField(verbose_name="Senha Criptografada")
     imap_host = models.CharField(max_length=255, default="imap.gmail.com", verbose_name="Servidor IMAP")
@@ -674,6 +696,13 @@ class EmailIngestionConfig(models.Model):
     use_ssl = models.BooleanField(default=True, verbose_name="Usar SSL")
     folder = models.CharField(max_length=100, default="INBOX", verbose_name="Pasta")
     is_active = models.BooleanField(default=True, verbose_name="Ativo")
+    destino = models.CharField(
+        max_length=20,
+        choices=Destino.choices,
+        default=Destino.ATENDIMENTO,
+        verbose_name="Destino da ingestao",
+        help_text="Define se o email recebido cria um Atendimento (fluxo com IA/AHP) ou um Chamado direto (legado).",
+    )
 
     last_checked_at = models.DateTimeField(null=True, blank=True, verbose_name="Ultima Verificacao")
     last_error = models.TextField(blank=True, verbose_name="Ultimo Erro")

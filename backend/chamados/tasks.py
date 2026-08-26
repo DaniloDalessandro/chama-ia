@@ -370,14 +370,28 @@ def enviar_email_chamado_concluido_task(self, chamado_id: int, atendente_id: int
 @shared_task(bind=False)
 def verificar_emails_inbox():
     """
-    Task periodica que le emails nao lidos da caixa de entrada IMAP
-    e cria chamados automaticamente para cada email recebido.
+    Task periodica que le emails nao lidos da caixa de entrada IMAP.
     Agendada via CELERY_BEAT_SCHEDULE a cada 5 minutos.
-    """
-    from chamados.services.email_ingestion import processar_emails
 
-    logger.info("Iniciando verificacao de emails (IMAP)...")
-    resultado = processar_emails()
+    Fase 3: o destino (Atendimento com IA/AHP, ou Chamado direto legado) e
+    escolhido por `EmailIngestionConfig.destino` -- mesma caixa IMAP, mesmo
+    agendamento, so muda o que e chamado por dentro. Sem config no banco,
+    o default e ATENDIMENTO (fluxo novo).
+    """
+    from chamados.models import EmailIngestionConfig
+
+    cfg = EmailIngestionConfig.objects.first()
+    destino = cfg.destino if cfg else EmailIngestionConfig.Destino.ATENDIMENTO
+
+    logger.info(f"Iniciando verificacao de emails (IMAP), destino={destino}...")
+
+    if destino == EmailIngestionConfig.Destino.ATENDIMENTO:
+        from atendimento.services.email_ingestion_service import processar_emails_atendimento
+        resultado = processar_emails_atendimento()
+    else:
+        from chamados.services.email_ingestion import processar_emails
+        resultado = processar_emails()
+
     logger.info(
         f"Verificacao de emails concluida: "
         f"processados={resultado.get('processados', 0)}, "

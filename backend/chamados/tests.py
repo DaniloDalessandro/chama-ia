@@ -1,13 +1,16 @@
 """
 Testes automatizados para o app chamados.
 """
+from unittest.mock import patch
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from rest_framework.test import APITestCase
 from rest_framework import status
 
-from .models import Chamado, AnexoChamado, ComentarioChamado
+from .models import Chamado, AnexoChamado, ComentarioChamado, EmailIngestionConfig
+from .tasks import verificar_emails_inbox
 from clientes.models import Cliente
 
 User = get_user_model()
@@ -565,3 +568,47 @@ class ChamadoPermissionTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         # Total deve ser apenas os chamados do cliente1
         self.assertEqual(response.data["total"], 1)
+
+
+class VerificarEmailsInboxDestinoTest(TestCase):
+    """
+    Fase 3: verificar_emails_inbox passa a escolher o fluxo (Atendimento novo
+    vs Chamado legado) com base em EmailIngestionConfig.destino.
+    """
+
+    @patch("atendimento.services.email_ingestion_service.processar_emails_atendimento")
+    @patch("chamados.services.email_ingestion.processar_emails")
+    def test_destino_atendimento_calls_new_flow_only(self, mock_processar_chamado, mock_processar_atendimento):
+        EmailIngestionConfig.objects.create(
+            email="caixa@test.com", encrypted_password="", destino=EmailIngestionConfig.Destino.ATENDIMENTO,
+        )
+        mock_processar_atendimento.return_value = {"enabled": True, "processados": 0, "erros": 0}
+
+        verificar_emails_inbox()
+
+        mock_processar_atendimento.assert_called_once()
+        mock_processar_chamado.assert_not_called()
+
+    @patch("atendimento.services.email_ingestion_service.processar_emails_atendimento")
+    @patch("chamados.services.email_ingestion.processar_emails")
+    def test_destino_chamado_calls_legacy_flow_only(self, mock_processar_chamado, mock_processar_atendimento):
+        EmailIngestionConfig.objects.create(
+            email="caixa@test.com", encrypted_password="", destino=EmailIngestionConfig.Destino.CHAMADO,
+        )
+        mock_processar_chamado.return_value = {"enabled": True, "processados": 0, "erros": 0}
+
+        verificar_emails_inbox()
+
+        mock_processar_chamado.assert_called_once()
+        mock_processar_atendimento.assert_not_called()
+
+    @patch("atendimento.services.email_ingestion_service.processar_emails_atendimento")
+    @patch("chamados.services.email_ingestion.processar_emails")
+    def test_no_config_row_defaults_to_atendimento(self, mock_processar_chamado, mock_processar_atendimento):
+        self.assertFalse(EmailIngestionConfig.objects.exists())
+        mock_processar_atendimento.return_value = {"enabled": True, "processados": 0, "erros": 0}
+
+        verificar_emails_inbox()
+
+        mock_processar_atendimento.assert_called_once()
+        mock_processar_chamado.assert_not_called()

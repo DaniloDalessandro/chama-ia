@@ -17,6 +17,8 @@ urlpatterns = [
     re_path(r"^api/v1/accounts/?", include("accounts.urls")),
     re_path(r"^api/v1/chamados/?", include("chamados.urls")),
     re_path(r"^api/v1/clientes/?", include("clientes.urls")),
+    re_path(r"^api/v1/ahp/?", include("ahp.urls")),
+    re_path(r"^api/v1/atendimento/?", include("atendimento.urls")),
     # Health Check
     path("health/", include("health_check.urls")),
     # API Documentation

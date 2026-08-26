@@ -64,6 +64,8 @@ INSTALLED_APPS = [
     "accounts",
     "chamados",
     "clientes",
+    "ahp",
+    "atendimento",
 ]
 
 MIDDLEWARE = [
@@ -253,6 +255,8 @@ REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {
     "authenticated": "1000/hour",  # Limite geral para usuários autenticados
     "strict_anon": "10/min",  # Limite estrito para endpoints públicos sensíveis
     "chamado_admin": "1000/hour",
+    "atendimento_publico": "10/hour",
+    "atendimento_publico_consulta": "30/minute",
 }
 
 # Logging
@@ -308,6 +312,22 @@ IA_SIMILARITY_THRESHOLD = 0.85
 
 # Compatibilidade retroativa
 IA_MODEL = os.environ.get("IA_MODEL", GROQ_MODEL)
+
+# DeepSeek (Fase 2 - agentes de IA do atendimento/chat)
+# API compativel com OpenAI (Chat Completions) -- langchain_openai.ChatOpenAI
+# apontando para o base_url da DeepSeek. CRITICAL: Set DEEPSEEK_API_KEY em producao.
+DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
+DEEPSEEK_BASE_URL = os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
+DEEPSEEK_TIMEOUT = int(os.environ.get("DEEPSEEK_TIMEOUT", 60))
+DEEPSEEK_MAX_RETRIES = int(os.environ.get("DEEPSEEK_MAX_RETRIES", 3))
+
+if not DEEPSEEK_API_KEY:
+    import warnings
+    warnings.warn(
+        "DEEPSEEK_API_KEY not set! Agentes de IA do atendimento ficarao em modo "
+        "degradado (fallback deterministico, sem LLM)."
+    )
 
 # Cache Configuration
 # Usa Redis se REDIS_CACHE_URL estiver definido, senao usa cache em memoria
