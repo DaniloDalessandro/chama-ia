@@ -338,10 +338,25 @@ def processar_chamado_completo(chamado_id: int) -> dict:
     chamado.chamado_similar_ref_id = similares.chamado_similar_id
     chamado.similaridade_score = similares.similaridade_score if similares.is_recorrente else None
 
+    # Prioridade via AHP (preferencial). Fallback para LLM se AHP indisponivel.
     prioridade_auto_aplicada = False
     old_prioridade = chamado.prioridade
-    if classificacao.prioridade_sugerida and chamado.prioridade != classificacao.prioridade_sugerida:
-        chamado.prioridade = classificacao.prioridade_sugerida
+    ahp_resultado = None
+
+    try:
+        from chamados.services.ahp_classifier import classificar_prioridade_ahp
+        ahp_resultado = classificar_prioridade_ahp(chamado)
+    except Exception as _ahp_exc:
+        logger.warning(f"AHP indisponivel para chamado {chamado_id}: {_ahp_exc}")
+
+    if ahp_resultado:
+        nova_prioridade = ahp_resultado["prioridade"]
+        chamado.ia_prioridade_sugerida = nova_prioridade
+    else:
+        nova_prioridade = classificacao.prioridade_sugerida
+
+    if nova_prioridade and chamado.prioridade != nova_prioridade:
+        chamado.prioridade = nova_prioridade
         prioridade_auto_aplicada = True
 
     chamado.save()
@@ -357,12 +372,18 @@ def processar_chamado_completo(chamado_id: int) -> dict:
             },
         )
 
+    origem_prioridade = "AHP" if ahp_resultado else f"Groq/{settings.GROQ_MODEL}"
     descricao_historico = (
-        f"Chamado processado por IA (LangChain + Groq/{settings.GROQ_MODEL}). "
-        f"Categoria: {classificacao.categoria}, Prioridade: {classificacao.prioridade_sugerida}"
+        f"Chamado processado por IA. Categoria: {classificacao.categoria}, "
+        f"Prioridade: {nova_prioridade} (via {origem_prioridade})"
     )
     if classificacao.is_financeiro_urgente:
-        descricao_historico += " (Financeiro - prioridade URGENTE)"
+        descricao_historico += " (Financeiro - regra critica)"
+    if ahp_resultado:
+        descricao_historico += (
+            f" [AHP indice={ahp_resultado['indice']:.2f}, "
+            f"P={ahp_resultado['prioridade_ahp'].upper()}]"
+        )
     if similares.is_recorrente:
         descricao_historico += f" (Recorrente - similaridade: {similares.similaridade_score:.2%})"
 
@@ -376,9 +397,9 @@ def processar_chamado_completo(chamado_id: int) -> dict:
         HistoricoChamado.objects.create(
             chamado=chamado,
             tipo_acao=HistoricoChamado.TipoAcao.PRIORIDADE_ALTERADA,
-            descricao=f"Prioridade alterada pela IA (Groq): {old_prioridade} -> {classificacao.prioridade_sugerida}",
+            descricao=f"Prioridade alterada por {origem_prioridade}: {old_prioridade} -> {nova_prioridade}",
             valor_anterior=old_prioridade,
-            valor_novo=classificacao.prioridade_sugerida,
+            valor_novo=nova_prioridade,
         )
 
     return {
@@ -386,11 +407,12 @@ def processar_chamado_completo(chamado_id: int) -> dict:
         "chamado_id": chamado_id,
         "classificacao": {
             "categoria": classificacao.categoria,
-            "prioridade_sugerida": classificacao.prioridade_sugerida,
+            "prioridade_sugerida": nova_prioridade,
             "resumo": classificacao.resumo,
             "confianca": classificacao.confianca,
             "is_financeiro_urgente": classificacao.is_financeiro_urgente,
         },
+        "ahp": ahp_resultado,
         "similaridade": {
             "is_recorrente": similares.is_recorrente,
             "chamado_similar_id": similares.chamado_similar_id,

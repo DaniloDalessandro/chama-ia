@@ -126,6 +126,41 @@ class AtendimentoViewSet(viewsets.ModelViewSet):
         )
         return Response(ChamadoDetailSerializer(chamado).data, status=status.HTTP_201_CREATED)
 
+    @action(detail=True, methods=["post"], url_path="resolver", permission_classes=[IsAuthenticated, IsAdminOrAtendente])
+    def resolver(self, request, pk=None):
+        from django.db import transaction
+
+        atendimento = self.get_object()
+
+        status_bloqueados = [
+            Atendimento.StatusAtendimento.RESOLVIDO,
+            Atendimento.StatusAtendimento.CANCELADO,
+        ]
+        if atendimento.status_atendimento in status_bloqueados:
+            raise ValidationError(
+                f"Atendimento ja esta '{atendimento.get_status_atendimento_display()}' e nao pode ser resolvido."
+            )
+
+        solucao = (request.data.get("solucao") or "").strip()
+        nome_responsavel = getattr(request.user, "name", None) or request.user.email
+
+        with transaction.atomic():
+            atendimento.status_atendimento = Atendimento.StatusAtendimento.RESOLVIDO
+            atendimento.atualizado_por = request.user
+            atendimento.save(update_fields=["status_atendimento", "atualizado_por", "atualizado_em"])
+
+            conteudo_msg = f"Atendimento resolvido por {nome_responsavel}."
+            if solucao:
+                conteudo_msg += f"\n\nSolucao: {solucao}"
+
+            MensagemAtendimento.objects.create(
+                atendimento=atendimento,
+                remetente_tipo=MensagemAtendimento.RemetenteTipo.SISTEMA,
+                conteudo=conteudo_msg,
+            )
+
+        return Response(AtendimentoSerializer(atendimento).data, status=status.HTTP_200_OK)
+
     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated, IsAdminOrAtendente])
     def fila(self, request):
         fila = FilaService.get_fila_ordenada()
