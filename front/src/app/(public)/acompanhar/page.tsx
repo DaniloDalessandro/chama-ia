@@ -9,24 +9,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
   Search,
-  Mail,
-  FileText,
-  Clock,
   ArrowLeft,
   Paperclip,
   MessageSquare,
   History,
   Loader2,
   AlertCircle,
-  ChevronRight,
 } from "lucide-react"
 import {
   chamadoService,
   type ChamadoConsultaProtocoloResponse,
-  type ChamadoResumoEmail,
 } from "@/services/ticket.service"
-
-type TabType = "protocolo" | "email"
 
 const STATUS_COLORS: Record<string, string> = {
   aberto: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400",
@@ -55,25 +48,12 @@ function formatDate(dateStr: string) {
   })
 }
 
-function formatDateShort(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  })
-}
 
 export default function AcompanharPage() {
-  const [activeTab, setActiveTab] = useState<TabType>("protocolo")
   const [protocolo, setProtocolo] = useState("")
-  const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
-
-  // Resultados
   const [chamadoDetail, setChamadoDetail] = useState<ChamadoConsultaProtocoloResponse | null>(null)
-  const [chamadosList, setChamadosList] = useState<ChamadoResumoEmail[]>([])
-  const [totalChamados, setTotalChamados] = useState(0)
   const [showDetail, setShowDetail] = useState(false)
 
   const handleBuscarProtocolo = async (e: React.FormEvent) => {
@@ -99,50 +79,6 @@ export default function AcompanharPage() {
     }
   }
 
-  const handleBuscarEmail = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email.trim()) return
-
-    setLoading(true)
-    setError("")
-    setChamadosList([])
-    setShowDetail(false)
-    setChamadoDetail(null)
-
-    try {
-      const response = await chamadoService.listarPorEmail(email.trim())
-      if (response.success && response.data) {
-        setChamadosList(response.data)
-        setTotalChamados(response.total || response.data.length)
-      } else {
-        setError(response.message || "Nenhum chamado encontrado.")
-      }
-    } catch {
-      setError("Erro ao buscar chamados. Tente novamente.")
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleVerDetalhes = async (protocoloItem: string) => {
-    setLoading(true)
-    setError("")
-
-    try {
-      const response = await chamadoService.consultarPorProtocolo(protocoloItem)
-      if (response.success && response.data) {
-        setChamadoDetail(response.data)
-        setShowDetail(true)
-      } else {
-        setError(response.message || "Erro ao carregar detalhes.")
-      }
-    } catch {
-      setError("Erro ao carregar detalhes. Tente novamente.")
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const handleVoltar = () => {
     setShowDetail(false)
     setChamadoDetail(null)
@@ -151,11 +87,9 @@ export default function AcompanharPage() {
 
   const resetAll = () => {
     setChamadoDetail(null)
-    setChamadosList([])
     setShowDetail(false)
     setError("")
     setProtocolo("")
-    setEmail("")
   }
 
   return (
@@ -173,9 +107,7 @@ export default function AcompanharPage() {
               Acompanhar Chamados
             </h1>
             <p className="mx-auto max-w-xl text-muted-foreground">
-              Digite o numero do protocolo para acompanhar o andamento do chamado.
-              Ou, se preferir, informe seu e-mail para visualizar todos os protocolos
-              ja abertos e acessar o historico completo.
+              Digite o numero do protocolo para acompanhar o andamento do seu chamado.
             </p>
           </div>
 
@@ -183,61 +115,18 @@ export default function AcompanharPage() {
           {!showDetail && (
             <Card className="mb-8 shadow-lg">
               <CardContent className="p-6">
-                {/* Tabs */}
-                <div className="mb-6 flex gap-2 rounded-lg bg-muted p-1">
-                  <button
-                    onClick={() => { setActiveTab("protocolo"); setError(""); setChamadosList([]); }}
-                    className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-all ${
-                      activeTab === "protocolo"
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <FileText className="h-4 w-4" />
-                    Por Protocolo
-                  </button>
-                  <button
-                    onClick={() => { setActiveTab("email"); setError(""); setChamadoDetail(null); }}
-                    className={`flex flex-1 items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-medium transition-all ${
-                      activeTab === "email"
-                        ? "bg-background text-foreground shadow-sm"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <Mail className="h-4 w-4" />
-                    Por E-mail
-                  </button>
-                </div>
+                <form onSubmit={handleBuscarProtocolo} className="flex gap-3">
+                  <Input
+                    placeholder="Digite o numero do protocolo (ex: 0001/2026)"
+                    value={protocolo}
+                    onChange={(e) => setProtocolo(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button type="submit" disabled={loading || !protocolo.trim()}>
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar"}
+                  </Button>
+                </form>
 
-                {/* Search Forms */}
-                {activeTab === "protocolo" ? (
-                  <form onSubmit={handleBuscarProtocolo} className="flex gap-3">
-                    <Input
-                      placeholder="Digite o numero do protocolo (ex: 0001/2026)"
-                      value={protocolo}
-                      onChange={(e) => setProtocolo(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button type="submit" disabled={loading || !protocolo.trim()}>
-                      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar"}
-                    </Button>
-                  </form>
-                ) : (
-                  <form onSubmit={handleBuscarEmail} className="flex gap-3">
-                    <Input
-                      type="email"
-                      placeholder="Digite seu e-mail"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button type="submit" disabled={loading || !email.trim()}>
-                      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Consultar"}
-                    </Button>
-                  </form>
-                )}
-
-                {/* Error */}
                 {error && (
                   <div className="mt-4 flex items-center gap-2 rounded-lg bg-destructive/10 px-4 py-3 text-sm text-destructive">
                     <AlertCircle className="h-4 w-4 shrink-0" />
@@ -246,54 +135,6 @@ export default function AcompanharPage() {
                 )}
               </CardContent>
             </Card>
-          )}
-
-          {/* Email List Results */}
-          {activeTab === "email" && chamadosList.length > 0 && !showDetail && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">
-                  {totalChamados} chamado{totalChamados !== 1 ? "s" : ""} encontrado{totalChamados !== 1 ? "s" : ""}
-                </h2>
-                <Button variant="ghost" size="sm" onClick={resetAll}>
-                  Nova consulta
-                </Button>
-              </div>
-
-              {chamadosList.map((item) => (
-                <Card key={item.protocolo} className="transition-shadow hover:shadow-md">
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center gap-3">
-                        <span className="font-mono text-sm font-bold text-primary">
-                          #{item.protocolo}
-                        </span>
-                        <Badge className={STATUS_COLORS[item.status] || "bg-gray-100 text-gray-800"}>
-                          {item.status_display}
-                        </Badge>
-                      </div>
-                      <p className="text-sm font-medium">{item.assunto}</p>
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          Aberto em {formatDateShort(item.created_at)}
-                        </span>
-                        <span>Atualizado em {formatDateShort(item.updated_at)}</span>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleVerDetalhes(item.protocolo)}
-                      disabled={loading}
-                    >
-                      Ver detalhes
-                      <ChevronRight className="ml-1 h-4 w-4" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
           )}
 
           {/* Detail View */}
@@ -471,7 +312,7 @@ export default function AcompanharPage() {
           )}
 
           {/* No results state (initial) */}
-          {!showDetail && chamadosList.length === 0 && !chamadoDetail && !error && !loading && (
+          {!showDetail && !chamadoDetail && !error && !loading && (
             <div className="mt-4 text-center text-sm text-muted-foreground">
               <Link href="/atendimento" className="text-primary hover:underline">
                 Precisa abrir um novo chamado? Clique aqui
