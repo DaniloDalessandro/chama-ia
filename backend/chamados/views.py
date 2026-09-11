@@ -17,6 +17,7 @@ from .serializers import (
     ChamadoPublicoCreateSerializer,
     ChamadoPublicoCreateResponseSerializer,
     ChamadoPublicoResponseSerializer,
+    ChamadoAdminCreateSerializer,
     ChamadoListSerializer,
     ChamadoDetailSerializer,
     ChamadoUpdateStatusSerializer,
@@ -533,6 +534,8 @@ class ChamadoAdminViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == "list":
             return ChamadoListSerializer
+        elif self.action == "create":
+            return ChamadoAdminCreateSerializer
         elif self.action == "retrieve":
             return ChamadoDetailSerializer
         elif self.action == "update_status":
@@ -548,6 +551,17 @@ class ChamadoAdminViewSet(viewsets.ModelViewSet):
         elif self.action == "add_anexo":
             return AnexoUploadSerializer
         return ChamadoDetailSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        chamado = serializer.save()
+
+        response_data = ChamadoDetailSerializer(chamado, context={"request": request}).data
+        return Response(
+            {"success": True, "message": "Chamado criado com sucesso!", "data": response_data},
+            status=status.HTTP_201_CREATED,
+        )
 
     @action(detail=True, methods=["patch"], url_path="status")
     def update_status(self, request, pk=None):

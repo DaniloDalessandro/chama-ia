@@ -451,6 +451,66 @@ class ChamadoDetailSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
+class ChamadoAdminCreateSerializer(serializers.ModelSerializer):
+    """Serializer para criacao de chamados pelo painel administrativo."""
+
+    class Meta:
+        model = Chamado
+        fields = [
+            "nome",
+            "email",
+            "telefone",
+            "cliente",
+            "tipo",
+            "assunto",
+            "descricao",
+            "prioridade",
+            "origem",
+            "atendente",
+        ]
+
+    def validate_nome(self, value):
+        value = sanitize_text(value)
+        if len(value) < 3:
+            raise serializers.ValidationError("Nome deve ter pelo menos 3 caracteres.")
+        return value
+
+    def validate_email(self, value):
+        return value.lower().strip()
+
+    def validate_assunto(self, value):
+        value = sanitize_text(value)
+        if len(value) < 5:
+            raise serializers.ValidationError("Assunto deve ter pelo menos 5 caracteres.")
+        return value
+
+    def validate_descricao(self, value):
+        value = sanitize_text(value)
+        if len(value) < 10:
+            raise serializers.ValidationError("Descricao deve ter pelo menos 10 caracteres.")
+        return value
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+
+        if "origem" not in validated_data:
+            validated_data["origem"] = Chamado.Origem.DASHBOARD
+
+        if request and request.user.is_authenticated:
+            validated_data["created_by"] = request.user
+
+        chamado = Chamado.objects.create(**validated_data)
+
+        HistoricoChamado.objects.create(
+            chamado=chamado,
+            tipo_acao=HistoricoChamado.TipoAcao.CRIADO,
+            descricao=f"Chamado criado via Dashboard por {request.user.name if request else 'sistema'}",
+            usuario=request.user if request and request.user.is_authenticated else None,
+        )
+
+        return chamado
+
+
 class ChamadoUpdateStatusSerializer(serializers.ModelSerializer):
     """Serializer para atualizacao de status do chamado."""
 

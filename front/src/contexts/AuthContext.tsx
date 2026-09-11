@@ -113,6 +113,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const storedToken = localStorage.getItem("access_token")
     const storedUser = localStorage.getItem("user")
+    const cookiesPresent =
+      document.cookie.includes("access_token") ||
+      document.cookie.includes("refresh_token")
+
+    // Se os cookies foram apagados externamente (ex: pelo usuário no navegador),
+    // tratar como logout mesmo que o localStorage ainda tenha tokens.
+    if (!cookiesPresent) {
+      clearAuth()
+      setIsLoading(false)
+      return
+    }
 
     if (storedToken && storedUser) {
       try {
