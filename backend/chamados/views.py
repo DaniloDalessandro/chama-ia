@@ -474,7 +474,7 @@ class ChamadoAdminViewSet(viewsets.ModelViewSet):
             "chamado_similar_ref"
         ).prefetch_related(
             "anexos",
-            "comentarios__usuario",
+            "comentarios__autor",
             "historico__usuario"
         )
 
@@ -612,6 +612,7 @@ class ChamadoAdminViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(chamado, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        chamado.refresh_from_db()
 
         return Response({
             "success": True,
@@ -689,7 +690,6 @@ class ChamadoAdminViewSet(viewsets.ModelViewSet):
         }, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=["get"], url_path="estatisticas")
-    @cache_response(timeout=300, key_prefix='chamados_stats')  # Cache por 5 minutos
     def estatisticas(self, request):
         """Retornar estatisticas dos chamados."""
         from django.db.models import Count

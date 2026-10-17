@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Headset, Home, Users, Settings, ExternalLink, Ticket, History, Building2, Inbox, Scale } from "lucide-react"
+import { Headset, Home, Users, Settings, ExternalLink, Ticket, History, Inbox } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -34,19 +34,9 @@ const navItems = [
     icon: Inbox,
   },
   {
-    title: "AHP",
-    url: "/ahp",
-    icon: Scale,
-  },
-  {
     title: "Histórico",
     url: "/historico",
     icon: History,
-  },
-  {
-    title: "Clientes",
-    url: "/clientes",
-    icon: Building2,
   },
   {
     title: "Usuários",

@@ -90,8 +90,14 @@ export default function ChamadosPage() {
     chamadoAdminService.listAtendentes().then(setAtendentes)
   }, [])
 
+  const prioridadeOrder: Record<string, number> = { urgente: 0, alta: 1, media: 2, baixa: 3 }
+
   const getChamadosByStatus = (status: StatusKanban) => {
-    return chamados.filter((c) => c.status_kanban === status)
+    const filtered = chamados.filter((c) => c.status_kanban === status)
+    if (status !== "novo") return filtered
+    return filtered.sort(
+      (a, b) => (prioridadeOrder[a.prioridade] ?? 9) - (prioridadeOrder[b.prioridade] ?? 9)
+    )
   }
 
   const handleDragStart = (event: DragStartEvent) => {

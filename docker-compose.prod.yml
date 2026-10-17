@@ -52,7 +52,12 @@ services:
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-chat}
       FRONTEND_URL: ${FRONTEND_URL:-http://82.25.75.110:4000}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@chamaia.local}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-Admin@ChamIA2024}
       EMAIL_BACKEND: ${EMAIL_BACKEND:-django.core.mail.backends.console.EmailBackend}
       EMAIL_HOST: ${EMAIL_HOST:-smtp.gmail.com}
       EMAIL_PORT: ${EMAIL_PORT:-587}
@@ -79,6 +84,18 @@ services:
     restart: unless-stopped
     command: >
       sh -c "python manage.py migrate --noinput &&
+             python manage.py shell -c \"
+from django.contrib.auth import get_user_model
+import os
+User = get_user_model()
+email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@chamaia.local')
+password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'Admin@ChamIA2024')
+if not User.objects.filter(email=email).exists():
+    User.objects.create_superuser(email=email, password=password)
+    print('Superuser created:', email)
+else:
+    print('Superuser already exists:', email)
+\" &&
              daphne -b 0.0.0.0 -p 8000 core.asgi:application"
 
   celery:
@@ -100,6 +117,7 @@ services:
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       WEBHOOK_ENCRYPTION_KEY: ${WEBHOOK_ENCRYPTION_KEY}
     volumes:
       - media_files:/app/media
@@ -130,6 +148,7 @@ services:
       REDIS_CACHE_URL: redis://redis:6379/1
       GROQ_API_KEY: ${GROQ_API_KEY:-}
       GROQ_MODEL: ${GROQ_MODEL:-llama-3.3-70b-versatile}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
       WEBHOOK_ENCRYPTION_KEY: ${WEBHOOK_ENCRYPTION_KEY}
     volumes:
       - media_files:/app/media

@@ -100,3 +100,70 @@ class Agente6NodeTests(TestCase):
 
         self.assertTrue(resultado["agente6_resultado"]["revisao_humana"])
         self.assertEqual(resultado["agente6_resultado"]["prioridade"], "revisao_humana")
+
+    # --- Testes da extensao fuzzy ---
+
+    def test_confianca_plena_nao_gera_revisao_fuzzy(self):
+        """Confiancas = 1.0 → sem spread → indice_l ≈ indice_u, sem revisao humana por ambiguidade."""
+        avaliacoes = [
+            {"criterio_codigo": codigo, "intensidade_codigo": "critica", "confianca": 1.0}
+            for codigo in [CODIGO_URGENCIA, CODIGO_IMPACTO_NO_CLIENTE, CODIGO_SENTIMENTO_DO_CLIENTE]
+        ]
+        state = {"atendimento_id": self.atendimento.id, "agente4_resultado": {"avaliacoes": avaliacoes}}
+
+        resultado = agente6_node(state)
+
+        r = resultado["agente6_resultado"]
+        self.assertEqual(resultado["erros"], [])
+        self.assertFalse(r["revisao_humana"])
+        # indice_l e indice_u devem estar presentes e iguais ao indice (sem spread com c=1.0)
+        self.assertIsNotNone(r["indice_l"])
+        self.assertIsNotNone(r["indice_u"])
+        self.assertAlmostEqual(r["indice_l"], r["indice"], places=5)
+        self.assertAlmostEqual(r["indice_u"], r["indice"], places=5)
+
+    def test_confianca_ausente_default_um_sem_crash(self):
+        """Avaliacoes sem campo 'confianca' default para 1.0 — sem crash, resultado normal."""
+        avaliacoes = [
+            {"criterio_codigo": CODIGO_URGENCIA, "intensidade_codigo": "critica"},
+            {"criterio_codigo": CODIGO_IMPACTO_NO_CLIENTE, "intensidade_codigo": "moderada"},
+            {"criterio_codigo": CODIGO_SENTIMENTO_DO_CLIENTE, "intensidade_codigo": "baixa"},
+        ]
+        state = {"atendimento_id": self.atendimento.id, "agente4_resultado": {"avaliacoes": avaliacoes}}
+
+        resultado = agente6_node(state)
+
+        self.assertEqual(resultado["erros"], [])
+        self.assertIsNotNone(resultado["agente6_resultado"])
+        # sem confianca explicita = 1.0 → sem spread → l = m = u
+        r = resultado["agente6_resultado"]
+        self.assertAlmostEqual(r["indice_l"], r["indice"], places=5)
+        self.assertAlmostEqual(r["indice_u"], r["indice"], places=5)
+
+    def test_confianca_baixa_cruza_banda_forces_revisao_humana(self):
+        """
+        Confianca=0.0 em URGENCIA desloca indice_l abaixo de 80 (P1/P2),
+        forcando revisao humana mesmo com todos os outros criticos.
+
+        TEMPO_DE_ESPERA = baixa (atendimento recem-criado).
+        indice_m ≈ 95 (P1); indice_l ≈ 76 (P2) → cruzamento → revisao_humana.
+        """
+        avaliacoes = [
+            {"criterio_codigo": CODIGO_URGENCIA, "intensidade_codigo": "critica", "confianca": 0.0},
+            {"criterio_codigo": CODIGO_IMPACTO_NO_CLIENTE, "intensidade_codigo": "critica", "confianca": 1.0},
+            {"criterio_codigo": CODIGO_SENTIMENTO_DO_CLIENTE, "intensidade_codigo": "critica", "confianca": 1.0},
+        ]
+        state = {"atendimento_id": self.atendimento.id, "agente4_resultado": {"avaliacoes": avaliacoes}}
+
+        resultado = agente6_node(state)
+
+        r = resultado["agente6_resultado"]
+        self.assertEqual(resultado["erros"], [])
+        self.assertTrue(r["revisao_humana"])
+        self.assertEqual(r["prioridade"], "revisao_humana")
+        # indice_l e indice_u devem indicar o cruzamento
+        self.assertIsNotNone(r["indice_l"])
+        self.assertIsNotNone(r["indice_u"])
+        self.assertLess(r["indice_l"], 80.0)
+        self.assertGreaterEqual(r["indice_u"], 80.0)
+        self.assertTrue(any("fuzzy" in m.lower() or "ambig" in m.lower() for m in r["motivos_revisao_humana"]))

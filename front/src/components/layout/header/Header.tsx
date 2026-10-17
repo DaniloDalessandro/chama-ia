@@ -1,5 +1,6 @@
 "use client"
 
+import { Fragment } from "react"
 import { usePathname } from "next/navigation"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
@@ -40,14 +41,16 @@ export function Header() {
       <Breadcrumb>
         <BreadcrumbList>
           {breadcrumbItems.map((item, index) => (
-            <BreadcrumbItem key={item.path}>
+            <Fragment key={item.path}>
               {index > 0 && <BreadcrumbSeparator />}
-              {item.isLast ? (
-                <BreadcrumbPage>{item.name}</BreadcrumbPage>
-              ) : (
-                <BreadcrumbLink href={item.path}>{item.name}</BreadcrumbLink>
-              )}
-            </BreadcrumbItem>
+              <BreadcrumbItem>
+                {item.isLast ? (
+                  <BreadcrumbPage>{item.name}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink href={item.path}>{item.name}</BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </Fragment>
           ))}
         </BreadcrumbList>
       </Breadcrumb>

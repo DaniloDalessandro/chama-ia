@@ -97,7 +97,7 @@ def chamado_post_save_handler(sender, instance, created, **kwargs):
         if old_instance.atendente_id != instance.atendente_id and instance.atendente:
             logger.info(
                 f"Signal: Atendente atribuido - {instance.protocolo} -> "
-                f"{instance.atendente.username}"
+                f"{instance.atendente.name}"
             )
 
             # Notificar atendente

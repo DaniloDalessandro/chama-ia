@@ -390,6 +390,7 @@ class ChamadoDetailSerializer(serializers.ModelSerializer):
     prioridade_display = serializers.CharField(source="get_prioridade_display", read_only=True)
     tipo_display = serializers.CharField(source="get_tipo_display", read_only=True)
     origem_display = serializers.CharField(source="get_origem_display", read_only=True)
+    atendente_id = serializers.IntegerField(source="atendente.id", read_only=True, default=None)
     atendente_nome = serializers.CharField(source="atendente.name", read_only=True, default=None)
     usuario_nome = serializers.CharField(source="usuario.name", read_only=True, default=None)
     created_by_nome = serializers.CharField(source="created_by.name", read_only=True, default=None)
@@ -422,6 +423,7 @@ class ChamadoDetailSerializer(serializers.ModelSerializer):
             "ip_address",
             "user_agent",
             "usuario_nome",
+            "atendente_id",
             "atendente_nome",
             "created_by_nome",
             "updated_by_nome",

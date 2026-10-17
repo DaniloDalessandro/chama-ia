@@ -20,6 +20,7 @@ export interface Chamado {
   prioridade_display: string
   origem: string
   origem_display: string
+  atendente_id: number | null
   atendente_nome: string | null
   created_by_nome: string | null
   updated_by_nome: string | null
@@ -405,6 +406,26 @@ export const chamadoAdminService = {
     const response = await fetchWithAuth("/api/v1/accounts/atendentes")
 
     if (!response.ok) return []
+
+    return response.json()
+  },
+
+  /**
+   * Atribuir atendente ao chamado
+   */
+  async atribuirAtendente(id: number, atendenteId: number | null): Promise<ApiResponse<ChamadoDetail>> {
+    const response = await fetchWithAuth(`${API_BASE}/${id}/atribuir`, {
+      method: "PATCH",
+      body: JSON.stringify({ atendente: atendenteId }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}))
+      return {
+        success: false,
+        message: error.message || "Erro ao atribuir atendente",
+      }
+    }
 
     return response.json()
   },

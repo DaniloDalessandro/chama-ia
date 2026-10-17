@@ -96,31 +96,34 @@ class NotificationService:
     @staticmethod
     def notify_chamado_created(chamado: Chamado):
         """
-        Notifica todos os admins quando um novo chamado e criado.
+        Notifica todos os admins e atendentes quando um novo chamado e criado.
 
         Args:
             chamado: Instancia do chamado criado
         """
-        # Buscar todos os admins
-        admins = User.objects.filter(is_staff=True, is_active=True)
+        usuarios = User.objects.filter(
+            role__in=["admin", "atendente"],
+            is_active=True,
+        ).distinct()
 
-        for admin in admins:
+        for usuario in usuarios:
             NotificationService.create_and_broadcast(
-                user=admin,
+                user=usuario,
                 notification_type=Notification.NotificationType.CHAMADO_CREATED,
                 title=f"Novo Chamado #{chamado.protocolo}",
-                message=f"Um novo chamado foi criado: {chamado.assunto}",
+                message=f"Novo chamado: {chamado.assunto}",
                 chamado=chamado
             )
 
         logger.info(
-            f"Notificacao de novo chamado enviada para {admins.count()} admins"
+            f"Notificacao de novo chamado enviada para {usuarios.count()} usuarios"
         )
 
     @staticmethod
     def notify_chamado_assigned(chamado: Chamado, atendente: User):
         """
-        Notifica o atendente quando um chamado e atribuido a ele.
+        Notifica todos os admins e atendentes quando um chamado e atribuido.
+        O atendente designado recebe mensagem personalizada; os demais recebem aviso geral.
 
         Args:
             chamado: Instancia do chamado
@@ -129,16 +132,27 @@ class NotificationService:
         if not atendente or not atendente.is_active:
             return
 
-        NotificationService.create_and_broadcast(
-            user=atendente,
-            notification_type=Notification.NotificationType.CHAMADO_ASSIGNED,
-            title=f"Chamado Atribuido #{chamado.protocolo}",
-            message=f"O chamado '{chamado.assunto}' foi atribuido a voce.",
-            chamado=chamado
-        )
+        todos = User.objects.filter(
+            role__in=["admin", "atendente"],
+            is_active=True,
+        ).distinct()
+
+        for usuario in todos:
+            if usuario.id == atendente.id:
+                message = f"O chamado '{chamado.assunto}' foi atribuido a voce."
+            else:
+                message = f"O chamado '{chamado.assunto}' foi atribuido para {atendente.name}."
+
+            NotificationService.create_and_broadcast(
+                user=usuario,
+                notification_type=Notification.NotificationType.CHAMADO_ASSIGNED,
+                title=f"Chamado Atribuido #{chamado.protocolo}",
+                message=message,
+                chamado=chamado
+            )
 
         logger.info(
-            f"Notificacao de atribuicao enviada para {atendente.username}"
+            f"Notificacao de atribuicao do chamado {chamado.protocolo} enviada para {todos.count()} usuarios"
         )
 
     @staticmethod

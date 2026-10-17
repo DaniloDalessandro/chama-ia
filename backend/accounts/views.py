@@ -96,7 +96,6 @@ class AtendentesListView(APIView):
     """Lista usuarios com role admin ou atendente (para filtros/atribuicao)."""
     permission_classes = [IsAuthenticated]
 
-    @cache_response(timeout=600, key_prefix='atendentes_list')  # Cache por 10 minutos
     def get(self, request):
         atendentes = User.objects.filter(
             role__in=["admin", "atendente"],
@@ -400,7 +399,6 @@ class UserViewSet(viewsets.ModelViewSet):
         }
     )
     @action(detail=False, methods=['get'])
-    @cache_response(timeout=300, key_prefix='users_stats')  # Cache por 5 minutos
     def stats(self, request):
         """Estatísticas de usuários."""
         total = User.objects.count()

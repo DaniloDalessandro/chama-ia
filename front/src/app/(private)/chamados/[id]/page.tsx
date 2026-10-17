@@ -99,6 +99,10 @@ export default function ChamadoDetailPage() {
   const [isSendingComment, setIsSendingComment] = useState(false)
   const [selectedPrioridade, setSelectedPrioridade] = useState("")
   const [selectedStatusKanban, setSelectedStatusKanban] = useState("")
+  const [atendentes, setAtendentes] = useState<{ id: number; name: string; email: string; role: string }[]>([])
+  const [atendentesLoaded, setAtendentesLoaded] = useState(false)
+  const [selectedAtendente, setSelectedAtendente] = useState<string>("none")
+  const [isAtribuindo, setIsAtribuindo] = useState(false)
 
   const fetchChamado = useCallback(async () => {
     if (!chamadoId || chamadoId <= 0) return
@@ -121,7 +125,18 @@ export default function ChamadoDetailPage() {
 
   useEffect(() => {
     fetchChamado()
+    chamadoAdminService.listAtendentes().then((data) => {
+      setAtendentes(data)
+      setAtendentesLoaded(true)
+    })
   }, [fetchChamado])
+
+  // Só sincroniza o atendente selecionado depois que ambos estão carregados
+  useEffect(() => {
+    if (atendentesLoaded && chamado) {
+      setSelectedAtendente(chamado.atendente_id ? String(chamado.atendente_id) : "none")
+    }
+  }, [atendentesLoaded, chamado])
 
   const handleSendComment = async () => {
     if (!chamado || !newComment.trim()) return
@@ -163,6 +178,25 @@ export default function ChamadoDetailPage() {
     } catch (err) {
       toast.error("Erro ao atualizar prioridade")
       setSelectedPrioridade(chamado.prioridade)
+    }
+  }
+
+  const handleAtribuir = async () => {
+    if (!chamado) return
+    setIsAtribuindo(true)
+    try {
+      const atendenteId = selectedAtendente === "none" ? null : Number(selectedAtendente)
+      const response = await chamadoAdminService.atribuirAtendente(chamado.id, atendenteId)
+      if (response.success) {
+        toast.success(atendenteId ? "Atendente atribuído!" : "Atendente removido!")
+        fetchChamado()
+      } else {
+        toast.error(response.message || "Erro ao atribuir atendente")
+      }
+    } catch {
+      toast.error("Erro ao atribuir atendente")
+    } finally {
+      setIsAtribuindo(false)
     }
   }
 
@@ -486,6 +520,36 @@ export default function ChamadoDetailPage() {
                     <SelectItem value="urgente">Urgente</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Atendente</p>
+                <select
+                  value={selectedAtendente}
+                  onChange={(e) => setSelectedAtendente(e.target.value)}
+                  disabled={isAtribuindo}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <option value="none">— Sem atendente —</option>
+                  {atendentes.map((a) => (
+                    <option key={a.id} value={String(a.id)}>
+                      {a.name}
+                    </option>
+                  ))}
+                </select>
+                <Button
+                  className="w-full mt-2"
+                  size="sm"
+                  onClick={handleAtribuir}
+                  disabled={isAtribuindo}
+                >
+                  {isAtribuindo ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <User className="mr-2 h-4 w-4" />
+                  )}
+                  Atribuir
+                </Button>
               </div>
 
             </CardContent>

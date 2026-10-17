@@ -88,7 +88,7 @@ class WebhookService:
         if chamado.atendente:
             embed["fields"].append({
                 "name": "Atendente",
-                "value": chamado.atendente.get_full_name() or chamado.atendente.username,
+                "value": chamado.atendente.get_full_name() or chamado.atendente.name,
                 "inline": True
             })
 
@@ -191,7 +191,7 @@ class WebhookService:
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"*Atendente:*\n{chamado.atendente.get_full_name() or chamado.atendente.username}"
+                    "text": f"*Atendente:*\n{chamado.atendente.get_full_name() or chamado.atendente.name}"
                 }
             })
 
@@ -243,7 +243,7 @@ class WebhookService:
                     "empresa": chamado.cliente.razao_social if chamado.cliente else None,
                 },
                 "atendente": {
-                    "username": chamado.atendente.username if chamado.atendente else None,
+                    "username": chamado.atendente.email if chamado.atendente else None,
                     "nome": chamado.atendente.get_full_name() if chamado.atendente else None,
                 } if chamado.atendente else None,
                 "created_at": chamado.created_at.isoformat(),

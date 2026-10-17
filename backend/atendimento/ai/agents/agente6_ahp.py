@@ -40,10 +40,13 @@ def agente6_node(state: dict) -> dict:
         return {"agente6_resultado": None, "erros": [{"agente": _AGENTE_NOME, "erro": "Nenhuma VersaoAHP ativa no momento."}]}
 
     agente4 = state.get("agente4_resultado") or {}
-    intensidades = {
-        avaliacao["criterio_codigo"]: avaliacao["intensidade_codigo"]
-        for avaliacao in agente4.get("avaliacoes", [])
-    }
+    avaliacoes_agente4 = agente4.get("avaliacoes", [])
+
+    intensidades = {av["criterio_codigo"]: av["intensidade_codigo"] for av in avaliacoes_agente4}
+
+    # Confiancas reportadas pelo LLM no Agente 4 (criterios interpretativos).
+    # TEMPO_DE_ESPERA e deterministico -- confianca maxima (1.0).
+    confiancas = {av["criterio_codigo"]: float(av.get("confianca", 1.0)) for av in avaliacoes_agente4}
 
     try:
         intensidades["TEMPO_DE_ESPERA"] = WaitingTimeService.get_intensidade_atual(atendimento).codigo
@@ -54,7 +57,11 @@ def agente6_node(state: dict) -> dict:
             "erros": [{"agente": _AGENTE_NOME, "erro": str(exc)}],
         }
 
-    resultado = ServicePriorityClassificationService.classify_from_intensidades(versao_ahp, intensidades)
+    confiancas["TEMPO_DE_ESPERA"] = 1.0
+
+    resultado = ServicePriorityClassificationService.classify_from_intensidades(
+        versao_ahp, intensidades, confiancas=confiancas
+    )
 
     return {
         "agente6_resultado": dataclasses.asdict(resultado),

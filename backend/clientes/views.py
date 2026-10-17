@@ -64,7 +64,6 @@ class ClienteViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
-    @cache_response(timeout=600, key_prefix='clientes_ativos')  # Cache por 10 minutos
     def ativos(self, request):
         """
         Retorna apenas clientes ativos.
@@ -87,7 +86,6 @@ class ClientePublicoListView(APIView):
     """
     permission_classes = [AllowAny]
 
-    @cache_response(timeout=900, key_prefix='clientes_publico')  # Cache por 15 minutos
     def get(self, request):
         """
         Retorna lista simplificada de clientes ativos.
