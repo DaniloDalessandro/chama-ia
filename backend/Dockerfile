@@ -12,6 +12,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+RUN sed -i 's/\r//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+
 RUN mkdir -p logs media staticfiles
 
 # Collect static files with a dummy key (not used at runtime)
