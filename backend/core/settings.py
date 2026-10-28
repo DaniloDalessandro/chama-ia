@@ -322,6 +322,10 @@ DEEPSEEK_MODEL = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
 DEEPSEEK_TIMEOUT = int(os.environ.get("DEEPSEEK_TIMEOUT", 60))
 DEEPSEEK_MAX_RETRIES = int(os.environ.get("DEEPSEEK_MAX_RETRIES", 3))
 
+# Hiperparametro da extensao fuzzy do AHP (largura do intervalo por confianca).
+# 0.10 equilibra interceptacao de erros e carga de revisao humana (ver metricas/).
+AHP_FUZZY_ALPHA = float(os.environ.get("AHP_FUZZY_ALPHA", 0.10))
+
 if not DEEPSEEK_API_KEY:
     import warnings
     warnings.warn(

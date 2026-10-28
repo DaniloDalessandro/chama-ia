@@ -20,5 +20,8 @@ else:
     print('Superuser already exists: ' + email)
 "
 
+echo "Ensuring active AHP version..."
+python manage.py ahp_bootstrap || echo "WARNING: ahp_bootstrap failed (system will use fallback classifier)."
+
 echo "Starting daphne..."
 exec daphne -b 0.0.0.0 -p 8000 core.asgi:application

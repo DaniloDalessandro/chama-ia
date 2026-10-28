@@ -40,6 +40,20 @@ const prioridadeColors: Record<string, string> = {
   urgente: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
 }
 
+const ahpColors: Record<string, string> = {
+  p1: "bg-red-600 text-white",
+  p2: "bg-orange-500 text-white",
+  p3: "bg-yellow-500 text-black",
+  p4: "bg-green-600 text-white",
+  revisao_humana: "bg-violet-600 text-white",
+}
+
+function formatAhp(prioridade: string, indice?: number | null) {
+  const rotulo = prioridade === "revisao_humana" ? "Revisao humana" : `AHP ${prioridade.toUpperCase()}`
+  if (indice === null || indice === undefined) return rotulo
+  return `${rotulo} · ${indice.toFixed(1).replace(".", ",")}`
+}
+
 function formatDate(dateString: string) {
   const date = new Date(dateString)
   const now = new Date()
@@ -136,10 +150,21 @@ export function KanbanCard({ chamado, onClick, isDragging }: KanbanCardProps) {
           {chamado.assunto}
         </h4>
 
-        {/* Tipo badge */}
-        <Badge variant="outline" className="text-xs">
-          {chamado.tipo_display}
-        </Badge>
+        {/* Tipo badge + resultado AHP */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="outline" className="text-xs">
+            {chamado.tipo_display}
+          </Badge>
+          {chamado.prioridade_ahp && (
+            <Badge
+              variant="secondary"
+              className={cn("text-xs font-semibold", ahpColors[chamado.prioridade_ahp] ?? ahpColors.p4)}
+              title="Prioridade calculada pelo AHP (indice 0-100)"
+            >
+              {formatAhp(chamado.prioridade_ahp, chamado.indice_ahp)}
+            </Badge>
+          )}
+        </div>
 
         {/* Footer com info adicional */}
         <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">

@@ -199,11 +199,15 @@ def classificar_prioridade_ahp(chamado) -> dict | None:
         )
 
         prioridade_ahp = (resultado.prioridade or "p4").lower()
-        prioridade = _PRIORIDADE_MAP.get(prioridade_ahp, "media")
-        indice = resultado.indice or 0.0
+        if prioridade_ahp == "revisao_humana":
+            # Caso ambiguo/limitrofe: mantem na fila como "alta" ate um atendente revisar.
+            prioridade = "alta"
+        else:
+            prioridade = _PRIORIDADE_MAP.get(prioridade_ahp, "media")
+        indice = resultado.indice
 
         logger.info(
-            f"AHP Chamado #{chamado.protocolo}: indice={indice:.2f} "
+            f"AHP Chamado #{chamado.protocolo}: indice={indice if indice is None else round(indice, 2)} "
             f"-> {prioridade_ahp} -> {prioridade}"
         )
 

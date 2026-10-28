@@ -352,6 +352,8 @@ def processar_chamado_completo(chamado_id: int) -> dict:
     if ahp_resultado:
         nova_prioridade = ahp_resultado["prioridade"]
         chamado.ia_prioridade_sugerida = nova_prioridade
+        chamado.prioridade_ahp = ahp_resultado.get("prioridade_ahp", "") or ""
+        chamado.indice_ahp = ahp_resultado.get("indice")
     else:
         nova_prioridade = classificacao.prioridade_sugerida
 
@@ -381,7 +383,7 @@ def processar_chamado_completo(chamado_id: int) -> dict:
         descricao_historico += " (Financeiro - regra critica)"
     if ahp_resultado:
         descricao_historico += (
-            f" [AHP indice={ahp_resultado['indice']:.2f}, "
+            f" [AHP indice={'-' if ahp_resultado['indice'] is None else format(ahp_resultado['indice'], '.2f')}, "
             f"P={ahp_resultado['prioridade_ahp'].upper()}]"
         )
     if similares.is_recorrente:

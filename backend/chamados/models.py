@@ -173,6 +173,13 @@ class Chamado(models.Model):
     ia_confianca = models.FloatField(default=0.0, verbose_name="Confianca IA")
     ia_processed_at = models.DateTimeField(null=True, blank=True, verbose_name="Processado IA em")
 
+    # Resultado do AHP (quando a priorizacao matematica foi aplicada)
+    prioridade_ahp = models.CharField(
+        max_length=20, blank=True, verbose_name="Prioridade AHP",
+        help_text="Banda calculada pelo AHP: p1, p2, p3, p4 ou revisao_humana.",
+    )
+    indice_ahp = models.FloatField(null=True, blank=True, verbose_name="Indice AHP (0-100)")
+
     # Deteccao de recorrencia
     # Rastreamento de origem por email (evitar reprocessar o mesmo email)
     email_message_id = models.CharField(

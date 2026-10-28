@@ -33,6 +33,8 @@ export interface Chamado {
   ia_processed: boolean
   ia_categoria: string
   ia_prioridade_sugerida: string
+  prioridade_ahp?: string
+  indice_ahp?: number | null
   ia_resumo: string
   ia_confianca: number
   is_recorrente: boolean

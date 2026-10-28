@@ -15,6 +15,8 @@ especifico. Nao recalcula autovetores/CR aqui.
 
 from dataclasses import dataclass, field
 
+from django.conf import settings
+
 from ahp.models import Intensidade, VersaoAHP
 from ahp.services.normalization_service import AHPNormalizationService
 from ahp.services.synthesis_service import AHPSynthesisService
@@ -90,14 +92,14 @@ class ServicePriorityClassificationService:
         versao_ahp: VersaoAHP,
         intensidades: dict,
         confiancas: dict | None = None,
-        alpha: float = 0.20,
+        alpha: float | None = None,
     ) -> ResultadoClassificacao:
         """Variante que aceita um dict {criterio_codigo: intensidade_codigo} diretamente,
         sem tocar o banco -- usada por comandos administrativos/testes sinteticos.
 
         confiancas: {criterio_codigo: float 0-1} -- quando fornecido, ativa o calculo
         fuzzy (indice_l / indice_u) apenas para fins informativos.
-        alpha: hiperparametro de escala fuzzy (default 0.20).
+        alpha: hiperparametro de escala fuzzy (default: settings.AHP_FUZZY_ALPHA).
         """
         return ServicePriorityClassificationService._classify_common(
             versao_ahp, intensidades, confiancas=confiancas, alpha=alpha
@@ -108,8 +110,10 @@ class ServicePriorityClassificationService:
         versao_ahp: VersaoAHP,
         intensidades_escolhidas: dict,
         confiancas: dict | None = None,
-        alpha: float = 0.20,
+        alpha: float | None = None,
     ) -> ResultadoClassificacao:
+        if alpha is None:
+            alpha = getattr(settings, "AHP_FUZZY_ALPHA", 0.10)
         pesos_criterios = versao_ahp.pesos_criterios or {}
         prioridades_locais = versao_ahp.prioridades_intensidades or {}
 
