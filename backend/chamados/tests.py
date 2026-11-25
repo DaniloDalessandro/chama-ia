@@ -85,6 +85,11 @@ class ChamadoModelTest(TestCase):
         )
         self.assertEqual(chamado.status_kanban, Chamado.StatusKanban.NOVO)
 
+        # Apos a classificacao da IA o chamado continua em "Novo"
+        chamado.status = Chamado.Status.EM_ANALISE
+        chamado.save()
+        self.assertEqual(chamado.status_kanban, Chamado.StatusKanban.NOVO)
+
         chamado.status = Chamado.Status.EM_ATENDIMENTO
         chamado.save()
         self.assertEqual(chamado.status_kanban, Chamado.StatusKanban.EM_ANDAMENTO)

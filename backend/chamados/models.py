@@ -257,7 +257,9 @@ class Chamado(models.Model):
         """Sincroniza o status_kanban baseado no status detalhado."""
         status_map = {
             self.Status.ABERTO: self.StatusKanban.NOVO,
-            self.Status.EM_ANALISE: self.StatusKanban.EM_ANDAMENTO,
+            # Em analise = ja classificado pela IA, ainda sem atendente:
+            # deve continuar na coluna "Novo" ate alguem assumir o chamado.
+            self.Status.EM_ANALISE: self.StatusKanban.NOVO,
             self.Status.EM_ATENDIMENTO: self.StatusKanban.EM_ANDAMENTO,
             self.Status.AGUARDANDO_CLIENTE: self.StatusKanban.EM_ANDAMENTO,
             self.Status.RESOLVIDO: self.StatusKanban.CONCLUIDO,
